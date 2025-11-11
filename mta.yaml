@@ -1,0 +1,200 @@
+_schema-version: 3.3.0
+ID: bworderapproval
+version: 1.0.0
+description: "A simple CAP project."
+parameters:
+  enable-parallel-deployments: true
+  deploy_mode: html5-repo
+build-parameters:
+  before-all:
+    - builder: custom
+      commands:
+        - npm ci
+        - npx cds build --production
+modules:
+  - name: bworderapproval-srv
+    type: nodejs
+    path: gen/srv
+    parameters:
+      instances: 1
+      buildpack: nodejs_buildpack
+    build-parameters:
+      builder: npm-ci
+    provides:
+      - name: srv-api # required by consumers of CAP services (e.g. approuter)
+        properties:
+          srv-url: ${default-url}
+    requires:
+      - name: bworderapproval-auth
+      - name: bworderapproval-db
+      - name: bworderapproval-destination
+
+  - name: bworderapproval-db-deployer
+    type: hdb
+    path: gen/db
+    parameters:
+      buildpack: nodejs_buildpack
+    requires:
+      - name: bworderapproval-db
+
+  - name: bworderapproval
+    type: approuter.nodejs
+    path: app/router
+    parameters:
+      keep-existing-routes: true
+      disk-quota: 256M
+      memory: 256M
+    requires:
+      - name: srv-api
+        group: destinations
+        properties:
+          name: srv-api # must be used in xs-app.json as well
+          url: ~{srv-url}
+          forwardAuthToken: true
+      - name: bworderapproval-auth
+      - name: bworderapproval-destination
+      - name: bworderapproval-html5-runtime
+    provides:
+      - name: app-api
+        properties:
+          app-protocol: ${protocol}
+          app-uri: ${default-uri}
+
+  - name: bworderapproval-app-deployer
+    type: com.sap.application.content
+    path: gen
+    requires:
+      - name: bworderapproval-auth
+      - name: srv-api
+      - name: bworderapproval-html5-repo-host
+        parameters:
+          content-target: true
+          config:
+            HTML5Runtime_enabled: true
+    build-parameters:
+      build-result: app/
+      requires:
+        - name: uibworderapproval
+          artifacts:
+            - uibworderapproval.zip
+          target-path: app/
+    parameters:
+      config:
+        HTML5Runtime_enabled: true
+        init_data:
+          instance:
+            existing_destinations_policy: update
+            destinations:
+              - Name: srv-api
+                URL: ~{srv-api/srv-url}
+                Authentication: NoAuthentication
+                Type: HTTP
+                ProxyType: Internet
+                HTML5.ForwardAuthToken: true
+                HTML5.DynamicDestination: true
+              - Name: ui5
+                URL: https://ui5.sap.com
+                Authentication: NoAuthentication
+                Type: HTTP
+                ProxyType: Internet
+
+  - name: uibworderapproval
+    type: html5
+    path: app/uibworderapproval
+    build-parameters:
+      build-result: dist
+      builder: custom
+      commands:
+        - npm ci
+        - npm run build
+      supported-platforms:
+        []
+
+  - name: bworderapproval-destinations
+    type: com.sap.application.content
+    requires:
+      - name: bworderapproval-auth
+        parameters:
+          service-key:
+            name: bworderapproval-auth-key
+      - name: bworderapproval-html5-repo-host
+        parameters:
+          service-key:
+            name: bworderapproval-html5-repo-host-key
+      - name: srv-api
+      - name: bworderapproval-destination
+        parameters:
+          content-target: true
+    build-parameters:
+      no-source: true
+    parameters:
+      content:
+        instance:
+          existing_destinations_policy: update
+          destinations:
+            - Name: bworderapproval-html5-repository
+              ServiceInstanceName: bworderapproval-html5-repo-host
+              ServiceKeyName: bworderapproval-html5-repo-host-key
+              sap.cloud.service: bworderapproval.service
+            - Name: bworderapproval-auth
+              Authentication: OAuth2UserTokenExchange
+              ServiceInstanceName: bworderapproval-auth
+              ServiceKeyName: bworderapproval-auth-key
+              sap.cloud.service: bworderapproval.service
+
+resources:
+  - name: bworderapproval-auth
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: xsuaa
+      service-plan: application
+      path: ./xs-security.json
+      config:
+        xsappname: bworderapproval-${org}-${space}
+        tenant-mode: dedicated
+        oauth2-configuration:
+          redirect-uris:
+            - https://*~{app-api/app-uri}/**
+    requires:
+      - name: app-api
+  - name: bworderapproval-db
+    type: com.sap.xs.hdi-container
+    parameters:
+      service: hana
+      service-plan: hdi-shared
+  - name: bworderapproval-destination
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: destination
+      service-plan: lite
+      config:
+        HTML5Runtime_enabled: true
+        init_data:
+          instance:
+            existing_destinations_policy: update
+            destinations:
+              - Name: srv-api
+                URL: ~{srv-api/srv-url}
+                Authentication: NoAuthentication
+                Type: HTTP
+                ProxyType: Internet
+                HTML5.ForwardAuthToken: true
+                HTML5.DynamicDestination: true
+    requires:
+      - name: srv-api
+        group: destinations
+        properties:
+          name: srv-api # must be used in xs-app.json as well
+          url: ~{srv-url}
+          forwardAuthToken: true
+
+  - name: bworderapproval-html5-repo-host
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: html5-apps-repo
+      service-plan: app-host
+  - name: bworderapproval-html5-runtime
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: html5-apps-repo
+      service-plan: app-runtime

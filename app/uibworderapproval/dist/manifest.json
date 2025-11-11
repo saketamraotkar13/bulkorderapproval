@@ -1,0 +1,182 @@
+{
+	"_version": "1.76.0",
+	"sap.app": {
+		"id": "uibworderapproval",
+		"type": "application",
+		"i18n": {
+			"bundleUrl": "i18n/i18n.properties",
+			"supportedLocales": [
+				""
+			]
+		},
+		"applicationVersion": {
+			"version": "0.0.1"
+		},
+		"title": "{{appTitle}}",
+		"description": "{{appDescription}}",
+		"resources": "resources.json",
+		"sourceTemplate": {
+			"id": "@sap/generator-fiori:lrop",
+			"version": "1.19.5",
+			"toolsId": "e09812ef-e52d-4397-9cc3-494f27824f43"
+		},
+		"dataSources": {
+			"mainService": {
+				"uri": "/odata/v4/my-order-approval/",
+				"type": "OData",
+				"settings": {
+					"annotations": [],
+					"odataVersion": "4.0"
+				}
+			}
+		},
+		"crossNavigation": {
+			"inbounds": {
+				"sem_bworders-display": {
+					"semanticObject": "sem_bworders",
+					"action": "display",
+					"title": "{{sem_bworders-display.flpTitle}}",
+					"signature": {
+						"parameters": {},
+						"additionalParameters": "allowed"
+					}
+				}
+			}
+		}
+	},
+	"sap.ui": {
+		"technology": "UI5",
+		"icons": {
+			"icon": "",
+			"favIcon": "",
+			"phone": "",
+			"phone@2": "",
+			"tablet": "",
+			"tablet@2": ""
+		},
+		"deviceTypes": {
+			"desktop": true,
+			"tablet": true,
+			"phone": true
+		}
+	},
+	"sap.ui5": {
+		"flexEnabled": true,
+		"dependencies": {
+			"minUI5Version": "1.142.0",
+			"libs": {
+				"sap.m": {},
+				"sap.ui.core": {},
+				"sap.fe.templates": {}
+			}
+		},
+		"contentDensities": {
+			"compact": true,
+			"cozy": true
+		},
+		"models": {
+			"i18n": {
+				"type": "sap.ui.model.resource.ResourceModel",
+				"settings": {
+					"bundleName": "uibworderapproval.i18n.i18n",
+					"supportedLocales": [
+						""
+					]
+				}
+			},
+			"": {
+				"dataSource": "mainService",
+				"preload": true,
+				"settings": {
+					"operationMode": "Server",
+					"autoExpandSelect": true,
+					"earlyRequests": true
+				}
+			},
+			"@i18n": {
+				"type": "sap.ui.model.resource.ResourceModel",
+				"uri": "i18n/i18n.properties",
+				"settings": {
+					"supportedLocales": [
+						""
+					]
+				}
+			}
+		},
+		"resources": {
+			"css": []
+		},
+		"routing": {
+			"config": {},
+			"routes": [
+				{
+					"pattern": ":?query:",
+					"name": "OrdersList",
+					"target": "OrdersList"
+				},
+				{
+					"pattern": "Orders({key}):?query:",
+					"name": "OrdersObjectPage",
+					"target": "OrdersObjectPage"
+				}
+			],
+			"targets": {
+				"OrdersList": {
+					"type": "Component",
+					"id": "OrdersList",
+					"name": "sap.fe.templates.ListReport",
+					"options": {
+						"settings": {
+							"contextPath": "/Orders",
+							"variantManagement": "Page",
+							"navigation": {
+								"Orders": {
+									"detail": {
+										"route": "OrdersObjectPage"
+									}
+								}
+							},
+							"controlConfiguration": {
+								"@com.sap.vocabularies.UI.v1.LineItem": {
+									"tableSettings": {
+										"type": "ResponsiveTable"
+									},
+									"actions": {
+										"bulkapproval": {
+											"press": "uibworderapproval.ext.controller.OrderList.onBulkApproval",
+											"visible": true,
+											"enabled": true,
+											"requiresSelection": true,
+											"text": "Mass Approval"
+										}
+									}
+								}
+							},
+							"initialLoad": "Enabled"
+						}
+					}
+				},
+				"OrdersObjectPage": {
+					"type": "Component",
+					"id": "OrdersObjectPage",
+					"name": "sap.fe.templates.ObjectPage",
+					"options": {
+						"settings": {
+							"editableHeaderContent": false,
+							"contextPath": "/Orders"
+						}
+					}
+				}
+			}
+		},
+		"flexBundle": false
+	},
+	"sap.fiori": {
+		"registrationIds": [],
+		"archeType": "transactional"
+	},
+	"sap.cloud": {
+		"public": true,
+		"service": "bworderapproval.service"
+	}
+}
