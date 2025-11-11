@@ -1,0 +1,7 @@
+orderNumber,itemNumber,product,sourceLocation,destinationLocation,mot,quantity,uom,category,categoryDescription,startDate,endDate,destDaySupp,destStockOH,mot2,abcClass,week,approveLoad,reasonCode
+2718302015,10,3800021962,8717,8759,ZTL,240,CS,EF,'Deployment: Purchase requisition',20251020,20251021,0,0,ZNL,D,2025043,,
+2718818233,10,3800021962,8717,8759,ZTL,1200,CS,EF,'Deployment: Purchase requisition',20251201,20251202,158,3080,CS,D,2025049,,
+2720766857,10,3800021962,8717,8759,ZTL,480,CS,EF,'Deployment: Purchase requisition',20251124,20251125,0,0,CS,D,2025048,,	
+2720827047,10,3800021962,8717,8759,ZTL,960,CS,EF,'Deployment: Purchase requisition',20251024,20251027,0,0,ZNL,D,2025043,,
+2721247513,1,3800010718,694,3491,ZIM,5400,CS,BF,'Order item schedule line',20251010,20251016,0,0,ZNL,D,2025041,,	
+2721357355,10,3800021962,8717,8759,ZTL,240,CS,EF,'Deployment: Purchase requisition',20251024,20251027,0,0,ZNL,D,2025043,,
