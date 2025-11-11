@@ -1,245 +1,236 @@
 using MyOrderApprovalService as service from '../../srv/srv';
+
 annotate service.Orders with @(
-    UI.FieldGroup #GeneratedGroup : {
-        $Type : 'UI.FieldGroupType',
+    UI.FieldGroup #GeneratedGroup: {
+        $Type: 'UI.FieldGroupType',
         Data : [
             {
-                $Type : 'UI.DataField',
-                Value : orderNumber,
+                $Type: 'UI.DataField',
+                Value: orderNumber,
             },
             {
-                $Type : 'UI.DataField',
-                Value : itemNumber,
+                $Type: 'UI.DataField',
+                Value: itemNumber,
             },
             {
-                $Type : 'UI.DataField',
-                Value : product,
+                $Type: 'UI.DataField',
+                Value: product,
             },
             {
-                $Type : 'UI.DataField',
-                Value : sourceLocation,
+                $Type: 'UI.DataField',
+                Value: sourceLocation,
             },
             {
-                $Type : 'UI.DataField',
-                Value : destinationLocation,
+                $Type: 'UI.DataField',
+                Value: destinationLocation,
             },
             {
-                $Type : 'UI.DataField',
-                Value : mot,
+                $Type: 'UI.DataField',
+                Value: mot,
             },
             {
-                $Type : 'UI.DataField',
-                Value : quantity,
+                $Type: 'UI.DataField',
+                Value: quantity,
             },
             {
-                $Type : 'UI.DataField',
-                Value : uom,
+                $Type: 'UI.DataField',
+                Value: uom,
             },
             {
-                $Type : 'UI.DataField',
-                Value : category,
+                $Type: 'UI.DataField',
+                Value: category,
             },
             {
-                $Type : 'UI.DataField',
-                Value : categoryDescription,
+                $Type: 'UI.DataField',
+                Value: categoryDescription,
             },
             {
-                $Type : 'UI.DataField',
-                Value : startDate,
+                $Type: 'UI.DataField',
+                Value: startDate,
             },
             {
-                $Type : 'UI.DataField',
-                Value : endDate,
+                $Type: 'UI.DataField',
+                Value: endDate,
             },
             {
-                $Type : 'UI.DataField',
-                Value : destDaySupp,
+                $Type: 'UI.DataField',
+                Value: destDaySupp,
             },
             {
-                $Type : 'UI.DataField',
-                Value : destStockOH,
+                $Type: 'UI.DataField',
+                Value: destStockOH,
             },
             {
-                $Type : 'UI.DataField',
-                Value : mot2,
+                $Type: 'UI.DataField',
+                Value: mot2,
             },
             {
-                $Type : 'UI.DataField',
-                Value : abcClass,
+                $Type: 'UI.DataField',
+                Value: abcClass,
             },
             {
-                $Type : 'UI.DataField',
-                Value : week,
+                $Type: 'UI.DataField',
+                Value: week,
             },
             {
-                $Type : 'UI.DataField',
-                Value : approveLoad,
+                $Type: 'UI.DataField',
+                Value: approveLoad,
             },
             {
-                $Type : 'UI.DataField',
-                Value : reasonCode,
+                $Type: 'UI.DataField',
+                Value: reasonCode,
             },
         ],
     },
-    UI.Facets : [
+    UI.Facets                    : [{
+        $Type : 'UI.ReferenceFacet',
+        ID    : 'GeneratedFacet1',
+        Label : 'General Information',
+        Target: '@UI.FieldGroup#GeneratedGroup',
+    }, ],
+    UI.LineItem                  : [
         {
-            $Type : 'UI.ReferenceFacet',
-            ID : 'GeneratedFacet1',
-            Label : 'General Information',
-            Target : '@UI.FieldGroup#GeneratedGroup',
+            $Type: 'UI.DataField',
+            Value: orderNumber,
+        },
+        {
+            $Type: 'UI.DataField',
+            Value: reasonCode,
+        },
+        {
+            $Type: 'UI.DataField',
+            Value: approveLoad,
+        },
+        {
+            $Type: 'UI.DataField',
+            Value: sourceLocation,
+        },
+        {
+            $Type: 'UI.DataField',
+            Value: destinationLocation,
         },
     ],
-    UI.LineItem : [
-        {
-            $Type : 'UI.DataField',
-            Value : orderNumber,
-        },
-        {
-            $Type : 'UI.DataField',
-            Value : itemNumber,
-        },
-        {
-            $Type : 'UI.DataField',
-            Value : product,
-        },
-        {
-            $Type : 'UI.DataField',
-            Value : sourceLocation,
-        },
-        {
-            $Type : 'UI.DataField',
-            Value : destinationLocation,
-        },
-    ],
-      UI.SelectionFields : [
-        category,
-        destinationLocation,
-        mot,
-        product,
-        reasonCode,
-        sourceLocation,
-        orderNumber,
-        approveLoad,
-    ],
-);
-
+    UI.selectionfields : [category, destinationlocation, mot, product, reasoncode, sourcelocation, ordernumber, approveload ]
+    );
 
 annotate service.Orders with {
     product @(
-        Common.ValueList : {
-            $Type : 'Common.ValueListType',
-            CollectionPath : 'ProductVH',
-            Parameters : [
-                {
-                    $Type : 'Common.ValueListParameterInOut',
-                    LocalDataProperty : product,
-                    ValueListProperty : 'product',
-                },
-            ],
-            Label : 'Product',
+        Common.ValueList               : {
+            $Type         : 'Common.ValueListType',
+            CollectionPath: 'ProductVH',
+            Parameters    : [{
+                $Type            : 'Common.ValueListParameterInOut',
+                LocalDataProperty: product,
+                ValueListProperty: 'product',
+            }, ],
+            Label         : 'Product',
         },
-        Common.ValueListWithFixedValues : false,
-)};
+        Common.ValueListWithFixedValues: false,
+    )
+};
 
 annotate service.Orders with {
     mot @(
-        Common.ValueList : {
-            $Type : 'Common.ValueListType',
-            CollectionPath : 'MOTVH',
-            Parameters : [
-                {
-                    $Type : 'Common.ValueListParameterInOut',
-                    LocalDataProperty : mot,
-                    ValueListProperty : 'mot',
-                },
-            ],
-            Label : 'MOT',
+        Common.ValueList               : {
+            $Type         : 'Common.ValueListType',
+            CollectionPath: 'MOTVH',
+            Parameters    : [{
+                $Type            : 'Common.ValueListParameterInOut',
+                LocalDataProperty: mot,
+                ValueListProperty: 'mot',
+            }, ],
+            Label         : 'MOT',
         },
-        Common.ValueListWithFixedValues : true,
-)};
+        Common.ValueListWithFixedValues: true,
+    )
+};
 
 annotate service.Orders with {
     sourceLocation @(
-        Common.ValueList : {
-            $Type : 'Common.ValueListType',
-            CollectionPath : 'sourceLocationVH',
-            Parameters : [
-                {
-                    $Type : 'Common.ValueListParameterInOut',
-                    LocalDataProperty : sourceLocation,
-                    ValueListProperty : 'sourceLocation',
-                },
-            ],
-            Label : 'Source Location ',
+        Common.ValueList               : {
+            $Type         : 'Common.ValueListType',
+            CollectionPath: 'sourceLocationVH',
+            Parameters    : [{
+                $Type            : 'Common.ValueListParameterInOut',
+                LocalDataProperty: sourceLocation,
+                ValueListProperty: 'sourceLocation',
+            }, ],
+            Label         : 'Source Location ',
         },
-        Common.ValueListWithFixedValues : true,
-)};
+        Common.ValueListWithFixedValues: true,
+    )
+};
 
 annotate service.Orders with {
     destinationLocation @(
-        Common.ValueList : {
-            $Type : 'Common.ValueListType',
-            CollectionPath : 'destinationLocationVH',
-            Parameters : [
-                {
-                    $Type : 'Common.ValueListParameterInOut',
-                    LocalDataProperty : destinationLocation,
-                    ValueListProperty : 'destinationLocation',
-                },
-            ],
-            Label : 'Destination Location',
+        Common.ValueList               : {
+            $Type         : 'Common.ValueListType',
+            CollectionPath: 'destinationLocationVH',
+            Parameters    : [{
+                $Type            : 'Common.ValueListParameterInOut',
+                LocalDataProperty: destinationLocation,
+                ValueListProperty: 'destinationLocation',
+            }, ],
+            Label         : 'Destination Location',
         },
-        Common.ValueListWithFixedValues : false,
-)};
+        Common.ValueListWithFixedValues: false,
+    )
+};
 
 annotate service.Orders with {
     category @(
-        Common.ValueList : {
-            $Type : 'Common.ValueListType',
-            CollectionPath : 'categoryVH',
-            Parameters : [
-                {
-                    $Type : 'Common.ValueListParameterInOut',
-                    LocalDataProperty : category,
-                    ValueListProperty : 'category',
-                },
-            ],
-            Label : 'Category',
+        Common.ValueList               : {
+            $Type         : 'Common.ValueListType',
+            CollectionPath: 'categoryVH',
+            Parameters    : [{
+                $Type            : 'Common.ValueListParameterInOut',
+                LocalDataProperty: category,
+                ValueListProperty: 'category',
+            }, ],
+            Label         : 'Category',
         },
-        Common.ValueListWithFixedValues : true,
-)};
+        Common.ValueListWithFixedValues: true,
+    )
+};
 
 annotate service.Orders with {
     orderNumber @(
-        Common.ValueList : {
-            $Type : 'Common.ValueListType',
-            CollectionPath : 'Orders',
-            Parameters : [
-                {
-                    $Type : 'Common.ValueListParameterInOut',
-                    LocalDataProperty : orderNumber,
-                    ValueListProperty : 'orderNumber',
-                },
-            ],
-            Label : 'OrderNo',
+        Common.ValueList               : {
+            $Type         : 'Common.ValueListType',
+            CollectionPath: 'Orders',
+            Parameters    : [{
+                $Type            : 'Common.ValueListParameterInOut',
+                LocalDataProperty: orderNumber,
+                ValueListProperty: 'orderNumber',
+            }, ],
+            Label         : 'OrderNo',
         },
-        Common.ValueListWithFixedValues : false,
-        Common.FieldControl : #ReadOnly,
-)};
+        Common.ValueListWithFixedValues: false,
+        Common.FieldControl            : #ReadOnly,
+    )
+};
 
 annotate service.Orders with {
     reasonCode @(
-        Common.ValueList : {
-            $Type : 'Common.ValueListType',
-            CollectionPath : 'reasonCodeVH',
-            Parameters : [
-                {
-                    $Type : 'Common.ValueListParameterInOut',
-                    LocalDataProperty : reasonCode,
-                    ValueListProperty : 'reasonCode',
-                },
-            ],
-            Label : 'Reason Code',
+        Common.ValueList               : {
+            $Type         : 'Common.ValueListType',
+            CollectionPath: 'reasonCodeVH',
+            Parameters    : [{
+                $Type            : 'Common.ValueListParameterInOut',
+                LocalDataProperty: reasonCode,
+                ValueListProperty: 'reasonCode',
+            }, ],
+            Label         : 'Reason Code',
         },
-        Common.ValueListWithFixedValues : true,
-)};
+        Common.ValueListWithFixedValues: true,
+    )
+};
+
+annotate service.Orders with @(
+  UI.HeaderInfo: {
+    TypeName: 'Order Details',
+    TypeNamePlural: 'Orders',
+    Title: { Value: orderNumber },
+    Description: { Value: sourceLocation }
+  }
+);
