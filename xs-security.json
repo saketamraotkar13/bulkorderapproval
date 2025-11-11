@@ -1,6 +1,6 @@
 {
   "xsappname": "bulkorderapproval",
-  "tenanat-mode": "dedicated",
+  "tenant-mode": "dedicated",
   "scopes": [],
   "attributes": [],
   "role-templates": [],
