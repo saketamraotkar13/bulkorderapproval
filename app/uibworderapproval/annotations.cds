@@ -110,7 +110,17 @@ annotate service.Orders with @(
             Value: destinationLocation,
         },
     ],
-    UI.selectionfields : [category, destinationlocation, mot, product, reasoncode, sourcelocation, ordernumber, approveload ]
+    UI.selectionfields : [category, destinationlocation, mot, product, reasoncode, sourcelocation, ordernumber, approveload ],
+    UI.SelectionFields : [
+        approveLoad,
+        category,
+        mot,
+        orderNumber,
+        product,
+        reasonCode,
+        sourceLocation,
+        destinationLocation,
+    ],
     );
 
 annotate service.Orders with {
