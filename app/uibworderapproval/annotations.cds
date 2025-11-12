@@ -126,6 +126,7 @@ annotate service.Orders with {
             Label         : 'Product',
         },
         Common.ValueListWithFixedValues: false,
+        Common.FieldControl : #ReadOnly,
     )
 };
 
@@ -142,6 +143,7 @@ annotate service.Orders with {
             Label         : 'MOT',
         },
         Common.ValueListWithFixedValues: true,
+        Common.FieldControl : #ReadOnly,
     )
 };
 
@@ -158,6 +160,7 @@ annotate service.Orders with {
             Label         : 'Source Location ',
         },
         Common.ValueListWithFixedValues: true,
+        Common.FieldControl : #ReadOnly,
     )
 };
 
@@ -174,6 +177,7 @@ annotate service.Orders with {
             Label         : 'Destination Location',
         },
         Common.ValueListWithFixedValues: false,
+        Common.FieldControl : #ReadOnly,
     )
 };
 
@@ -190,6 +194,7 @@ annotate service.Orders with {
             Label         : 'Category',
         },
         Common.ValueListWithFixedValues: true,
+        Common.FieldControl : #ReadOnly,
     )
 };
 
@@ -234,3 +239,47 @@ annotate service.Orders with @(
     Description: { Value: sourceLocation }
   }
 );
+annotate service.Orders with {
+    itemNumber @Common.FieldControl : #ReadOnly
+};
+
+annotate service.Orders with {
+    quantity @Common.FieldControl : #ReadOnly
+};
+
+annotate service.Orders with {
+    uom @Common.FieldControl : #ReadOnly
+};
+
+annotate service.Orders with {
+    categoryDescription @Common.FieldControl : #ReadOnly
+};
+
+annotate service.Orders with {
+    startDate @Common.FieldControl : #ReadOnly
+};
+
+annotate service.Orders with {
+    endDate @Common.FieldControl : #ReadOnly
+};
+
+annotate service.Orders with {
+    destDaySupp @Common.FieldControl : #ReadOnly
+};
+
+annotate service.Orders with {
+    destStockOH @Common.FieldControl : #ReadOnly
+};
+
+annotate service.Orders with {
+    mot2 @Common.FieldControl : #ReadOnly
+};
+
+annotate service.Orders with {
+    abcClass @Common.FieldControl : #ReadOnly
+};
+
+annotate service.Orders with {
+    week @Common.FieldControl : #ReadOnly
+};
+
