@@ -13,34 +13,47 @@ sap.ui.define([
             }
 
             const oModel = aSelectedContexts[0].getModel();
-            const aOrders = aSelectedContexts.map(ctx => ctx.getObject().orderNumber);
+            const aSelectedOrders = aSelectedContexts.map(ctx => ctx.getObject());
+            const aOrders = aSelectedOrders.map(o => o.orderNumber);
+            const countSelectedOrders = aSelectedOrders.length;
 
-            // 🔹 Get the ListReport (Fiori Elements Table)
-            const oView = sap.ui.getCore().byId("OrdersList"); // target id from manifest
-            const oTable = oView && oView.getContent
-                ? oView.getContent()[0].getTable()
-                : null;
+            // 🔹 Flatten FE filters
+            const flattenFilters = function(oFilter) {
+                let aResult = [];
+                if (!oFilter) return aResult;
+                if (oFilter.aFilters && oFilter.aFilters.length > 0) {
+                    oFilter.aFilters.forEach(f => {
+                        aResult = aResult.concat(flattenFilters(f));
+                    });
+                } else if (oFilter.sPath) {
+                    aResult.push({
+                        path: oFilter.sPath,
+                        operator: oFilter.sOperator,
+                        value1: oFilter.oValue1,
+                        value2: oFilter.oValue2
+                    });
+                }
+                return aResult;
+            };
 
-            let oBinding = oTable ? oTable.getBinding("items") || oTable.getBinding("rows") : null;
-
-            // 🔹 Extract filters (if any)
+            const oFEFilters = this.getFilters();
             let aFilters = [];
-            if (oBinding && oBinding.aFilters && oBinding.aFilters.length > 0) {
-                aFilters = oBinding.aFilters.map(f => ({
-                    path: f.sPath,
-                    operator: f.sOperator,
-                    value1: f.oValue1,
-                    value2: f.oValue2
-                }));
+            if (oFEFilters.filters && oFEFilters.filters.length > 0) {
+                aFilters = flattenFilters(oFEFilters.filters[0]);
             }
 
-            console.log("🔹 Extracted Filters:", aFilters);
+            // ✅ Controls
+            var oApproveCheckbox = new sap.m.CheckBox({
+                text: "Approve Load",
+                width: "100%",
+                selected: true
+            });
 
-            // Reason Code ComboBox
             var oReasonCombo = new sap.m.ComboBox({
                 width: "100%",
                 placeholder: "Select Reason Code...",
-                enabled: true,
+                enabled: !oApproveCheckbox.getSelected(),
+                required: !oApproveCheckbox.getSelected(),
                 items: {
                     path: "/reasonCodeVH",
                     template: new sap.ui.core.ListItem({
@@ -50,20 +63,39 @@ sap.ui.define([
                 }
             });
 
-            // Approve Checkbox
-            var oApproveCheckbox = new sap.m.CheckBox({
-                text: "Approve Load",
+            oApproveCheckbox.attachSelect(function(oEvent){
+                var bApprove = oEvent.getParameter("selected");
+                oReasonCombo.setEnabled(!bApprove);
+                oReasonCombo.setRequired(!bApprove);
+            });
+
+            var oSelectAllCheckbox = new sap.m.CheckBox({
+                text: "Apply on all filtered orders",
+                design: "Bold",
                 width: "90%",
-                selected: true
+                selected: false
+            });
+
+            var oCountOrders = new sap.m.Label({
+                text: "Selected Orders: " + countSelectedOrders,
+                width: "100%",
+                visible: !oSelectAllCheckbox.getSelected()
+            });
+
+            // toggle visibility of selected count
+            oSelectAllCheckbox.attachSelect(function(oEvent) {
+                oCountOrders.setVisible(!oEvent.getParameter("selected"));
             });
 
             // VBox layout
             var oVBox = new sap.m.VBox({
-                width: "90%",
+                width: "100%",
                 items: [
                     oApproveCheckbox,
                     new sap.m.Label({ text: "Reason Code", design: "Bold" }),
-                    oReasonCombo
+                    oReasonCombo,
+                    oCountOrders,
+                    oSelectAllCheckbox
                 ],
                 class: "sapUiSmallMargin sapUiMediumPadding"
             });
@@ -80,6 +112,7 @@ sap.ui.define([
                     press: async function () {
                         var bApproveLoad = oApproveCheckbox.getSelected();
                         var sReasonCode = oReasonCombo.getSelectedKey();
+                        var bSelectAll = oSelectAllCheckbox.getSelected();
 
                         if (!bApproveLoad && !sReasonCode) {
                             sap.m.MessageBox.warning("Reason Code is required when rejecting the order.");
@@ -87,7 +120,7 @@ sap.ui.define([
                         }
 
                         try {
-                            // 🔹 Split orders into chunks
+                            // Split orders into chunks
                             function chunkArray(array, size) {
                                 const result = [];
                                 for (let i = 0; i < array.length; i += size) {
@@ -98,13 +131,13 @@ sap.ui.define([
 
                             const chunkedOrders = chunkArray(aOrders, 200);
 
-                            // 🔹 Process each chunk
                             for (const ordersChunk of chunkedOrders) {
                                 var oAction = oModel.bindContext("/approveOrders(...)");
                                 oAction.setParameter("orders", ordersChunk);
                                 oAction.setParameter("approveLoad", bApproveLoad);
                                 oAction.setParameter("reasonCode", sReasonCode);
-                                oAction.setParameter("filters", JSON.stringify(aFilters)); // 🟢 send filters
+                                oAction.setParameter("filters", JSON.stringify(aFilters));
+                                oAction.setParameter("allSelected", bSelectAll);
 
                                 await oAction.execute();
                             }
@@ -133,6 +166,24 @@ sap.ui.define([
             oDialog.setModel(oModel);
             oDialog.addStyleClass("sapUiContentPadding sapUiSizeCompact");
             oDialog.open();
+        },
+
+        _flattenFilters: function(oFilter) {
+            let aResult = [];
+            if (!oFilter) return aResult;
+            if (oFilter.aFilters && oFilter.aFilters.length > 0) {
+                oFilter.aFilters.forEach(f => {
+                    aResult = aResult.concat(this._flattenFilters(f));
+                });
+            } else if (oFilter.sPath) {
+                aResult.push({
+                    path: oFilter.sPath,
+                    operator: oFilter.sOperator,
+                    value1: oFilter.oValue1,
+                    value2: oFilter.oValue2
+                });
+            }
+            return aResult;
         }
 
     };

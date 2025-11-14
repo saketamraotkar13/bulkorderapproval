@@ -1,67 +1,128 @@
 const cds = require('@sap/cds');
 
 class MyOrderApprovalService extends cds.ApplicationService {
-  async init() {
-    await super.init();
+    async init() {
+        await super.init();
 
-    this.on('approveOrders', async (req) => {
-      let { orders, approveLoad, reasonCode, filters } = req.data;
+        this.on('approveOrders', async (req) => {
+            let { orders, approveLoad, reasonCode, filters, allSelected } = req.data;
 
-      // 🪵 Debug logs
-      console.log("✅ Incoming approveOrders call");
-      console.log("orders:", orders);
-      console.log("approveLoad:", approveLoad);
-      console.log("reasonCode:", reasonCode);
-      console.log("filters (raw):", filters);
+            console.log("✅ Incoming approveOrders call");
+            console.log("orders:", orders);
+            console.log("approveLoad:", approveLoad);
+            console.log("reasonCode:", reasonCode);
+            console.log("allSelected:", allSelected);
+            console.log("filters (raw):", filters);
 
-      // If filters provided (Approve All Filtered Orders)
-      if (filters) {
-        try {
-          filters = JSON.parse(filters);
-          console.log("filters (parsed):", filters);
-        } catch (err) {
-          console.error("❌ Error parsing filters:", err);
-        }
+            const validFields = [
+                'orderNumber','itemNumber','product','sourceLocation','destinationLocation',
+                'mot','quantity','uom','category','categoryDescription','startDate','endDate',
+                'destDaySupp','destStockOH','mot2','abcClass','week','approveLoad','reasonCode'
+            ];
 
-        // Build WHERE conditions
-        const whereConditions = {};
-        if (filters.category) whereConditions.category = filters.category;
-        if (filters.status) whereConditions.status = filters.status;
-        if (filters.sourceLocation) whereConditions.sourceLocation = filters.sourceLocation;
-        if (filters.destinationLocation) whereConditions.destinationLocation = filters.destinationLocation;
-        if (filters.dateFrom && filters.dateTo) {
-          whereConditions.orderDate = { ">=": filters.dateFrom, "<=": filters.dateTo };
-        }
+            let whereConditions = {};
 
-        console.log("whereConditions:", whereConditions);
+            // 🔹 Process filters if provided
+            if (filters) {
+                let aFilters = [];
+                try {
+                    aFilters = JSON.parse(filters);
+                } catch (err) {
+                    console.error("❌ Error parsing filters:", err);
+                }
 
-        // Select matching order numbers from DB
-        const rows = await SELECT.from('strbw.Orders')
-          .where(whereConditions)
-          .columns(['orderNumber']);
+                const validFilters = aFilters.filter(f => f.path && validFields.includes(f.path));
 
-        orders = rows.map(r => r.orderNumber);
-        console.log(`Found ${orders.length} matching orders from filters`);
-      }
+                validFilters.forEach(f => {
+                    if (!f.path) return;
 
-      if (!orders || orders.length === 0)
-        return req.error(400, 'No orders to update.');
+                    switch(f.operator) {
+                        case "EQ":
+                            if (whereConditions[f.path]) {
+                                if (!Array.isArray(whereConditions[f.path].in)) {
+                                    whereConditions[f.path] = { in: [whereConditions[f.path]] };
+                                }
+                                if (Array.isArray(f.value1)) {
+                                    whereConditions[f.path].in.push(...f.value1);
+                                } else {
+                                    whereConditions[f.path].in.push(f.value1);
+                                }
+                            } else {
+                                if (Array.isArray(f.value1)) {
+                                    whereConditions[f.path] = { in: f.value1 };
+                                } else {
+                                    whereConditions[f.path] = f.value1;
+                                }
+                            }
+                            break;
+                        case "NE":
+                            whereConditions[f.path] = { "<>": f.value1 };
+                            break;
+                        case "GT":
+                            whereConditions[f.path] = { ">": f.value1 };
+                            break;
+                        case "LT":
+                            whereConditions[f.path] = { "<": f.value1 };
+                            break;
+                        case "GE":
+                            whereConditions[f.path] = { ">=": f.value1 };
+                            break;
+                        case "LE":
+                            whereConditions[f.path] = { "<=": f.value1 };
+                            break;
+                        case "BT":
+                            if (f.value2 !== undefined) {
+                                whereConditions[f.path] = { ">=": f.value1, "<=": f.value2 };
+                            }
+                            break;
+                        default:
+                            console.warn("Unsupported filter operator:", f.operator);
+                    }
+                });
+            }
 
-      // Update orders in DB
-      if (reasonCode) {
-        await UPDATE('strbw.Orders')
-          .set({ approveLoad, reasonCode })
-          .where({ orderNumber: { in: orders } });
-      } else {
-        await UPDATE('strbw.Orders')
-          .set({ approveLoad })
-          .where({ orderNumber: { in: orders } });
-      }
+            let ordersToUpdate = [];
 
-      console.log(`✅ ${orders.length} orders updated successfully`);
-      return { success: true, message: `${orders.length} orders updated successfully.` };
-    });
-  }
+            if (allSelected) {
+                // 🔹 Apply to all filtered orders (or all if filters empty)
+                const rows = await SELECT.from('strbw.Orders')
+                    .where(whereConditions)
+                    .columns(['orderNumber']);
+
+                ordersToUpdate = rows.map(r => r.orderNumber);
+
+            } else {
+                // 🔹 Only update selected orders
+                if (!orders || orders.length === 0) {
+                    return req.error(400, "No orders selected.");
+                }
+
+                if (Object.keys(whereConditions).length > 0) {
+                    const rows = await SELECT.from('strbw.Orders')
+                        .where(whereConditions)
+                        .columns(['orderNumber']);
+                    const filteredOrders = rows.map(r => r.orderNumber);
+                    ordersToUpdate = orders.filter(o => filteredOrders.includes(o));
+                } else {
+                    ordersToUpdate = orders;
+                }
+            }
+
+            if (!ordersToUpdate || ordersToUpdate.length === 0) {
+                return req.error(400, 'No orders to update.');
+            }
+
+            // Prepare update payload
+            const updateData = reasonCode ? { approveLoad, reasonCode } : { approveLoad };
+
+            await UPDATE('strbw.Orders')
+                .set(updateData)
+                .where({ orderNumber: { in: ordersToUpdate } });
+
+            console.log(`✅ ${ordersToUpdate.length} orders updated successfully`);
+            return { success: true, message: `${ordersToUpdate.length} orders updated successfully.` };
+        });
+    }
 }
 
 module.exports = MyOrderApprovalService;

@@ -5,22 +5,54 @@ sap.ui.define([
     'use strict';
 
     return {
-        /**
-         * Generated event handler.
-         *
-         * @param oContext the context of the page on which the event was fired. `undefined` for list report page.
-         * @param aSelectedContexts the selected contexts of the table rows.
-         */
+
         onBulkApproval: async function (oContext, aSelectedContexts) {
+            debugger
             if (!aSelectedContexts || aSelectedContexts.length === 0) {
                 sap.m.MessageBox.warning("Please select at least one order.");
                 return;
             }
 
-            var aOrders = aSelectedContexts.map(ctx => ctx.getObject().orderNumber);
-            var oModel = aSelectedContexts[0].getModel();
+            const oModel = aSelectedContexts[0].getModel();
+            const aOrders = aSelectedContexts.map(ctx => ctx.getObject().orderNumber);
 
-            // Reason Code ComboBox (always enabled)
+            // 🔹 Get the ListReport (Fiori Elements Table)
+            const oView = sap.ui.getCore().byId("OrdersList"); // target id from manifest
+            const oTable = oView && oView.getContent
+                ? oView.getContent()[0].getTable()
+                : null;
+
+            let oBinding = oTable ? oTable.getBinding("items") || oTable.getBinding("rows") : null;
+
+//****************** */           
+const flattenFilters = function(oFilter) {
+        let aResult = [];
+        if (!oFilter) return aResult;
+        if (oFilter.aFilters && oFilter.aFilters.length > 0) {
+            oFilter.aFilters.forEach(f => {
+                aResult = aResult.concat(flattenFilters(f));
+            });
+        } else if (oFilter.sPath) {
+            aResult.push({
+                path: oFilter.sPath,
+                operator: oFilter.sOperator,
+                value1: oFilter.oValue1,
+                value2: oFilter.oValue2
+            });
+        }
+        return aResult;
+    };
+
+    const oFEFilters = this.getFilters();
+    let aFilters = [];
+    if (oFEFilters.filters && oFEFilters.filters.length > 0) {
+        aFilters = flattenFilters(oFEFilters.filters[0]);
+    }
+    console.log("Flattened Filters:", aFilters);
+
+//*************** */
+
+            // Reason Code ComboBox
             var oReasonCombo = new sap.m.ComboBox({
                 width: "100%",
                 placeholder: "Select Reason Code...",
@@ -65,14 +97,13 @@ sap.ui.define([
                         var bApproveLoad = oApproveCheckbox.getSelected();
                         var sReasonCode = oReasonCombo.getSelectedKey();
 
-                        // Validation: Reason required only when rejecting
                         if (!bApproveLoad && !sReasonCode) {
                             sap.m.MessageBox.warning("Reason Code is required when rejecting the order.");
                             return;
                         }
 
                         try {
-                            // 🔹 Split orders into chunks (e.g., 200 per batch)
+                            // 🔹 Split orders into chunks
                             function chunkArray(array, size) {
                                 const result = [];
                                 for (let i = 0; i < array.length; i += size) {
@@ -83,20 +114,19 @@ sap.ui.define([
 
                             const chunkedOrders = chunkArray(aOrders, 200);
 
-                            // 🔹 Process each chunk sequentially
+                            // 🔹 Process each chunk
                             for (const ordersChunk of chunkedOrders) {
                                 var oAction = oModel.bindContext("/approveOrders(...)");
                                 oAction.setParameter("orders", ordersChunk);
                                 oAction.setParameter("approveLoad", bApproveLoad);
-                                if (sReasonCode) {
-                                    oAction.setParameter("reasonCode", sReasonCode);
-                                }
+                                oAction.setParameter("reasonCode", sReasonCode);
+                                oAction.setParameter("filters", JSON.stringify(aFilters)); // 🟢 send filters
+
                                 await oAction.execute();
                             }
 
                             sap.m.MessageToast.show("Orders processed successfully.");
                             oModel.refresh();
-
                         } catch (oError) {
                             console.error("Bulk approval failed:", oError);
                             sap.m.MessageBox.error("Bulk approval failed: " + (oError.message || "Unknown error"));
@@ -116,10 +146,27 @@ sap.ui.define([
                 }
             });
 
-            // Attach model
             oDialog.setModel(oModel);
             oDialog.addStyleClass("sapUiContentPadding sapUiSizeCompact");
             oDialog.open();
+        },
+
+       _flattenFilters: function (oFilter) {
+            let aResult = [];
+            if (!oFilter) return aResult;
+            if (oFilter.aFilters && oFilter.aFilters.length > 0) {
+                oFilter.aFilters.forEach(f => {
+                    aResult = aResult.concat(this._flattenFilters(f));
+                });
+            } else if (oFilter.sPath) {
+                aResult.push({
+                    path: oFilter.sPath,
+                    operator: oFilter.sOperator,
+                    value1: oFilter.oValue1,
+                    value2: oFilter.oValue2
+                });
+            }
+            return aResult;
         }
 
 

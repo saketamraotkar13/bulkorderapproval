@@ -11,7 +11,8 @@ service MyOrderApprovalService {
     action approveOrders(orders: array of String,
                          approveLoad: Boolean,
                          reasonCode: String,
-                         filters: String) returns String;
+                         filters: String,
+                         allSelected: Boolean) returns String;
 
     entity ProductVH             as
         projection on mydb.Orders {

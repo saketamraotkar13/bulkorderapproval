@@ -282,10 +282,6 @@ annotate service.Orders with {
 };
 
 annotate service.Orders with {
-    mot2 @Common.FieldControl : #ReadOnly
-};
-
-annotate service.Orders with {
     abcClass @Common.FieldControl : #ReadOnly
 };
 
