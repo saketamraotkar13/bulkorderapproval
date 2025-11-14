@@ -80,6 +80,57 @@ annotate service.Orders with @(
                 $Type: 'UI.DataField',
                 Value: reasonCode,
             },
+            {
+                $Type : 'UI.DataField',
+                Value : fastedMOT,
+                Label : 'fastedMOT',
+            },
+            {
+                $Type : 'UI.DataField',
+                Value : fastedMotCost,
+            },
+            {
+                $Type : 'UI.DataField',
+                Value : fastedMotDurationDays,
+            },
+            {
+                $Type : 'UI.DataField',
+                Value : slowestMOT,
+                Label : 'slowestMOT',
+            },
+            {
+                $Type : 'UI.DataField',
+                Value : slowestMotCost,
+            },
+            {
+                $Type : 'UI.DataField',
+                Value : slowestMotDurationDays,
+            },
+            {
+                $Type : 'UI.DataField',
+                Value : impactAmount,
+            },
+            {
+                $Type : 'UI.DataField',
+                Value : productCategory,
+                Label : 'productCategory',
+            },
+            {
+                $Type : 'UI.DataField',
+                Value : estimatedRisk,
+            },
+            {
+                $Type : 'UI.DataField',
+                Value : costDelta,
+            },
+            {
+                $Type : 'UI.DataField',
+                Value : aiReason,
+            },
+            {
+                $Type : 'UI.DataField',
+                Value : aiOutput,
+            },
         ],
     },
     UI.Facets                    : [{
