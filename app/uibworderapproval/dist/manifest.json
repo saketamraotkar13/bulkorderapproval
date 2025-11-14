@@ -22,7 +22,7 @@
 		},
 		"dataSources": {
 			"mainService": {
-				"uri": "/odata/v4/my-order-approval/",
+				"uri": "odata/v4/my-order-approval/",
 				"type": "OData",
 				"settings": {
 					"annotations": [],
@@ -139,7 +139,7 @@
 							"controlConfiguration": {
 								"@com.sap.vocabularies.UI.v1.LineItem": {
 									"tableSettings": {
-										"type": "ResponsiveTable"
+										"type": "GridTable"
 									},
 									"actions": {
 										"bulkapproval": {

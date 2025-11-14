@@ -1,18 +1,18 @@
 const cds = require('@sap/cds');
 
 class MyOrderApprovalService extends cds.ApplicationService {
+
     async init() {
         await super.init();
 
         this.on('approveOrders', async (req) => {
+
             let { orders, approveLoad, reasonCode, filters, allSelected } = req.data;
 
-            console.log("✅ Incoming approveOrders call");
+            console.log("🔥 approveOrders invoked");
             console.log("orders:", orders);
-            console.log("approveLoad:", approveLoad);
-            console.log("reasonCode:", reasonCode);
-            console.log("allSelected:", allSelected);
             console.log("filters (raw):", filters);
+            console.log("allSelected:", allSelected);
 
             const validFields = [
                 'orderNumber','itemNumber','product','sourceLocation','destinationLocation',
@@ -22,77 +22,82 @@ class MyOrderApprovalService extends cds.ApplicationService {
 
             let whereConditions = {};
 
-            // 🔹 Process filters if provided
+            // -------------------------------
+            //  PARSE FILTERS
+            // -------------------------------
             if (filters) {
                 let aFilters = [];
                 try {
                     aFilters = JSON.parse(filters);
-                } catch (err) {
-                    console.error("❌ Error parsing filters:", err);
-                }
+                } catch (e) { console.log("❌ Filter parse error:", e); }
 
                 const validFilters = aFilters.filter(f => f.path && validFields.includes(f.path));
 
                 validFilters.forEach(f => {
-                    if (!f.path) return;
+                    const field = f.path;
 
-                    switch(f.operator) {
+                    switch (f.operator) {
                         case "EQ":
-                            if (whereConditions[f.path]) {
-                                if (!Array.isArray(whereConditions[f.path].in)) {
-                                    whereConditions[f.path] = { in: [whereConditions[f.path]] };
-                                }
-                                if (Array.isArray(f.value1)) {
-                                    whereConditions[f.path].in.push(...f.value1);
-                                } else {
-                                    whereConditions[f.path].in.push(f.value1);
-                                }
-                            } else {
-                                if (Array.isArray(f.value1)) {
-                                    whereConditions[f.path] = { in: f.value1 };
-                                } else {
-                                    whereConditions[f.path] = f.value1;
-                                }
+                            if (!whereConditions[field]) {
+                                whereConditions[field] = [];
                             }
+                            whereConditions[field].push(f.value1);
                             break;
-                        case "NE":
-                            whereConditions[f.path] = { "<>": f.value1 };
-                            break;
-                        case "GT":
-                            whereConditions[f.path] = { ">": f.value1 };
-                            break;
-                        case "LT":
-                            whereConditions[f.path] = { "<": f.value1 };
-                            break;
-                        case "GE":
-                            whereConditions[f.path] = { ">=": f.value1 };
-                            break;
-                        case "LE":
-                            whereConditions[f.path] = { "<=": f.value1 };
-                            break;
+
                         case "BT":
-                            if (f.value2 !== undefined) {
-                                whereConditions[f.path] = { ">=": f.value1, "<=": f.value2 };
-                            }
+                            whereConditions[field] = { ">=": f.value1, "<=": f.value2 };
                             break;
+
+                        case "NE":
+                            whereConditions[field] = { "<>": f.value1 };
+                            break;
+
+                        case "GT":
+                            whereConditions[field] = { ">": f.value1 };
+                            break;
+
+                        case "LT":
+                            whereConditions[field] = { "<": f.value1 };
+                            break;
+
+                        case "GE":
+                            whereConditions[field] = { ">=": f.value1 };
+                            break;
+
+                        case "LE":
+                            whereConditions[field] = { "<=": f.value1 };
+                            break;
+
                         default:
-                            console.warn("Unsupported filter operator:", f.operator);
+                            console.warn("⚠ Unsupported operator:", f.operator);
+                    }
+                });
+
+                // Convert EQ arrays → IN conditions
+                Object.keys(whereConditions).forEach(k => {
+                    if (Array.isArray(whereConditions[k])) {
+                        whereConditions[k] = { in: whereConditions[k] };
                     }
                 });
             }
 
+            // -------------------------------
+            //  DETERMINE WHICH ORDERS TO UPDATE
+            // -------------------------------
             let ordersToUpdate = [];
 
             if (allSelected) {
-                // 🔹 Apply to all filtered orders (or all if filters empty)
+                console.log("🔍 allSelected = TRUE — loading by filters");
+
                 const rows = await SELECT.from('strbw.Orders')
                     .where(whereConditions)
                     .columns(['orderNumber']);
 
                 ordersToUpdate = rows.map(r => r.orderNumber);
+            }
+            else {
+                console.log("🔍 Updating only selected orders");
 
-            } else {
-                // 🔹 Only update selected orders
                 if (!orders || orders.length === 0) {
                     return req.error(400, "No orders selected.");
                 }
@@ -101,26 +106,53 @@ class MyOrderApprovalService extends cds.ApplicationService {
                     const rows = await SELECT.from('strbw.Orders')
                         .where(whereConditions)
                         .columns(['orderNumber']);
-                    const filteredOrders = rows.map(r => r.orderNumber);
-                    ordersToUpdate = orders.filter(o => filteredOrders.includes(o));
+
+                    const filtered = rows.map(r => r.orderNumber);
+
+                    ordersToUpdate = orders.filter(o => filtered.includes(o));
                 } else {
                     ordersToUpdate = orders;
                 }
             }
 
-            if (!ordersToUpdate || ordersToUpdate.length === 0) {
-                return req.error(400, 'No orders to update.');
+            if (ordersToUpdate.length === 0) {
+                return req.error(400, "No orders to update.");
             }
 
-            // Prepare update payload
-            const updateData = reasonCode ? { approveLoad, reasonCode } : { approveLoad };
+            // -------------------------------
+            //  BATCH UPDATE (Fixes packet errors)
+            // -------------------------------
+            const BATCH_SIZE = 200;
 
-            await UPDATE('strbw.Orders')
-                .set(updateData)
-                .where({ orderNumber: { in: ordersToUpdate } });
+            const chunk = (arr, size) =>
+                arr.reduce((acc, _, i) =>
+                    (i % size ? acc : [...acc, arr.slice(i, i + size)]), []);
 
-            console.log(`✅ ${ordersToUpdate.length} orders updated successfully`);
-            return { success: true, message: `${ordersToUpdate.length} orders updated successfully.` };
+            const batches = chunk(ordersToUpdate, BATCH_SIZE);
+
+            const updateData = reasonCode
+                ? { approveLoad, reasonCode }
+                : { approveLoad };
+
+            try {
+                for (const batch of batches) {
+                    await UPDATE('strbw.Orders')
+                        .set(updateData)
+                        .where({ orderNumber: { in: batch } });
+                }
+
+                console.log(`✅ Updated ${ordersToUpdate.length} orders in ${batches.length} batches`);
+
+                return {
+                    success: true,
+                    message: `${ordersToUpdate.length} orders updated successfully.`
+                };
+
+            } catch (err) {
+                console.error("❌ Bulk update error:", err);
+                return req.error(500, "Bulk approval failed: " + err.message);
+            }
+
         });
     }
 }

@@ -35,7 +35,10 @@
       "workzone": true
     },
     "server": {
-      "index": true
+      "index": true,
+      "body_parser": {
+        "limit": "50mb" 
+      }
     }
   }
 }
