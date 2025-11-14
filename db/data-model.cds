@@ -39,9 +39,38 @@ entity Orders {
     approveLoad               : Boolean;
     @title: 'Reason Code'
     reasonCode                : String;
-}
+//new fields    
+    @titile: 'Fasted MOT'
+    fastedMOT                 : String;
+    @titile: 'Slowest MOT'
+    slowestMOT                : String;
+    @titile: 'Product Category'
+    productCategory          : String;
+    @title : 'Estimated Risk'
+    estimatedRisk            : String;
+    @title : 'Cost Delta'
+    costDelta                : String;
+    @title : 'Impact Amount'
+    impactAmount            : String;
+    @title: 'Fasted MOT Cost'
+    fastedMotCost           : String;
+    @title : 'Slowest MOT Cost'
+    slowestMotCost          : String;
+    @title: 'Fastest MOT Duration Days'
+    fastedMotDurationDays       : String;
+    @title: 'Slowest MOT Duration Days'
+    slowestMotDurationDays      : String;
+    @title : 'AI Reason'
+    aiReason                    : String;
+    @title: 'AI Output'
+    aiOutput                    : String;
+} 
 
 entity reasonCodeVH  {
     key reasonCode: String;
     description: String;
+}
+
+entity mot2VH  {
+    key MOT2: String;
 }

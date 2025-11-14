@@ -93,13 +93,21 @@ annotate service.Orders with @(
             $Type: 'UI.DataField',
             Value: orderNumber,
         },
-        {
+          {
             $Type: 'UI.DataField',
-            Value: reasonCode,
+            Value: itemNumber,
         },
         {
-            $Type: 'UI.DataField',
-            Value: approveLoad,
+            $Type : 'UI.DataField',
+            Value : product,
+        },
+        {
+            $Type : 'UI.DataField',
+            Value : abcClass,
+        },
+        {
+            $Type : 'UI.DataField',
+            Value : category,
         },
         {
             $Type: 'UI.DataField',
@@ -108,6 +116,42 @@ annotate service.Orders with @(
         {
             $Type: 'UI.DataField',
             Value: destinationLocation,
+        },
+        {
+            $Type : 'UI.DataField',
+            Value : destDaySupp,
+        },
+        {
+            $Type : 'UI.DataField',
+            Value : destStockOH,
+        },
+        {
+            $Type : 'UI.DataField',
+            Value : quantity,
+        },
+        {
+            $Type : 'UI.DataField',
+            Value : uom,
+        },
+        {
+            $Type : 'UI.DataField',
+            Value : mot,
+        },
+        {
+            $Type : 'UI.DataField',
+            Value : mot2,
+        },
+        {
+            $Type : 'UI.DataField',
+            Value : aiReason,
+        },
+        {
+            $Type: 'UI.DataField',
+            Value: reasonCode,
+        },
+        {
+            $Type: 'UI.DataField',
+            Value: approveLoad,
         },
     ],
     UI.selectionfields : [category, destinationlocation, mot, product, reasoncode, sourcelocation, ordernumber, approveload ],

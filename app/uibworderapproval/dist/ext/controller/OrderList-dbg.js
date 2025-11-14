@@ -3,7 +3,7 @@ sap.ui.define([
     "sap/m/MessageBox"
 ], function (MessageToast, MessageBox) {
     'use strict';
-
+    
     return {
 
         onBulkApproval: async function (oContext, aSelectedContexts) {
