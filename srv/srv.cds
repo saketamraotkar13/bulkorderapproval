@@ -22,11 +22,11 @@ service MyOrderApprovalService {
             product;
 
     entity MOT2VH                as
-        projection on mydb.Orders {
-            key mot2 : String
+        projection on mydb.mot2VH {
+            key MOT2 : String
         }
         group by
-            mot2;
+            MOT2;
 
     entity MOTVH                 as
         projection on mydb.Orders {

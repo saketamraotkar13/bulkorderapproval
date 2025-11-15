@@ -62,10 +62,6 @@ annotate service.Orders with @(
             },
             {
                 $Type: 'UI.DataField',
-                Value: mot2,
-            },
-            {
-                $Type: 'UI.DataField',
                 Value: abcClass,
             },
             {
@@ -130,6 +126,10 @@ annotate service.Orders with @(
             {
                 $Type: 'UI.DataField',
                 Value: approveLoad,
+            },
+            {
+                $Type : 'UI.DataField',
+                Value : mot2,
             },
         ],
     },
@@ -320,7 +320,7 @@ annotate service.Orders with {
     )
 };
 
-annotate service.Orders with {
+annotate service.reasonCodeVH with {
     reasonCode @(
         Common.ValueList               : {
             $Type         : 'Common.ValueListType',
@@ -331,6 +331,22 @@ annotate service.Orders with {
                 ValueListProperty: 'reasonCode',
             }, ],
             Label         : 'Reason Code',
+        },
+        Common.ValueListWithFixedValues: true,
+    )
+};
+
+annotate service.MOT2VH with {
+    MOT2 @(
+        Common.ValueList               : {
+            $Type         : 'Common.ValueListType',
+            CollectionPath: 'mot2VH',
+            Parameters    : [{
+                $Type            : 'Common.ValueListParameterInOut',
+                LocalDataProperty: MOT2,
+                ValueListProperty: 'MOT2',
+            }, ],
+            Label         : 'MOT2',
         },
         Common.ValueListWithFixedValues: true,
     )
@@ -441,10 +457,10 @@ annotate service.Orders with {
                 {
                     $Type : 'Common.ValueListParameterInOut',
                     LocalDataProperty : mot2,
-                    ValueListProperty : 'mot2',
+                    ValueListProperty : 'MOT2',
                 },
             ],
-            Label : 'MOT2',
+            Label : 'MOT2VH',
         },
         Common.ValueListWithFixedValues : true,
 )};
