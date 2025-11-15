@@ -73,14 +73,6 @@ annotate service.Orders with @(
                 Value: week,
             },
             {
-                $Type: 'UI.DataField',
-                Value: approveLoad,
-            },
-            {
-                $Type: 'UI.DataField',
-                Value: reasonCode,
-            },
-            {
                 $Type : 'UI.DataField',
                 Value : fastedMOT,
                 Label : 'fastedMOT',
@@ -130,6 +122,14 @@ annotate service.Orders with @(
             {
                 $Type : 'UI.DataField',
                 Value : aiOutput,
+            },
+            {
+                $Type: 'UI.DataField',
+                Value: reasonCode,
+            },
+            {
+                $Type: 'UI.DataField',
+                Value: approveLoad,
             },
         ],
     },
@@ -383,4 +383,69 @@ annotate service.Orders with {
 annotate service.Orders with {
     week @Common.FieldControl : #ReadOnly
 };
+
+annotate service.Orders with {
+    fastedMOT @Common.FieldControl : #ReadOnly
+};
+
+annotate service.Orders with {
+    fastedMotCost @Common.FieldControl : #ReadOnly
+};
+
+annotate service.Orders with {
+    fastedMotDurationDays @Common.FieldControl : #ReadOnly
+};
+
+annotate service.Orders with {
+    slowestMOT @Common.FieldControl : #ReadOnly
+};
+
+annotate service.Orders with {
+    slowestMotCost @Common.FieldControl : #ReadOnly
+};
+
+annotate service.Orders with {
+    slowestMotDurationDays @Common.FieldControl : #ReadOnly
+};
+
+annotate service.Orders with {
+    impactAmount @Common.FieldControl : #ReadOnly
+};
+
+annotate service.Orders with {
+    productCategory @Common.FieldControl : #ReadOnly
+};
+
+annotate service.Orders with {
+    estimatedRisk @Common.FieldControl : #ReadOnly
+};
+
+annotate service.Orders with {
+    costDelta @Common.FieldControl : #ReadOnly
+};
+
+annotate service.Orders with {
+    aiReason @Common.FieldControl : #ReadOnly
+};
+
+annotate service.Orders with {
+    aiOutput @Common.FieldControl : #ReadOnly
+};
+
+annotate service.Orders with {
+    mot2 @(
+        Common.ValueList : {
+            $Type : 'Common.ValueListType',
+            CollectionPath : 'MOT2VH',
+            Parameters : [
+                {
+                    $Type : 'Common.ValueListParameterInOut',
+                    LocalDataProperty : mot2,
+                    ValueListProperty : 'mot2',
+                },
+            ],
+            Label : 'MOT2',
+        },
+        Common.ValueListWithFixedValues : true,
+)};
 
