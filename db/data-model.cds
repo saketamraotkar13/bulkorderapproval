@@ -4,7 +4,7 @@ entity Orders {
     @title: 'Order Number'
     key orderNumber           : String;
     @title: 'Item Number'
-    itemNumber                : String;
+    key itemNumber                : String;
     @title: 'Product'
     product                   : String;
     @title: 'Source Location'

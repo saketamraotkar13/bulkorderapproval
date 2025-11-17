@@ -91,9 +91,12 @@ class MyOrderApprovalService extends cds.ApplicationService {
 
                 const rows = await SELECT.from('strbw.Orders')
                     .where(whereConditions)
-                    .columns(['orderNumber']);
+                    .columns(['orderNumber', 'itemNumber']);
 
-                ordersToUpdate = rows.map(r => r.orderNumber);
+                ordersToUpdate = rows.map(r => ({ 
+                    orderNumber: r.orderNumber, 
+                    itemNumber: r.itemNumber 
+                }));
             }
             else {
                 console.log("🔍 Updating only selected orders");
@@ -105,11 +108,14 @@ class MyOrderApprovalService extends cds.ApplicationService {
                 if (Object.keys(whereConditions).length > 0) {
                     const rows = await SELECT.from('strbw.Orders')
                         .where(whereConditions)
-                        .columns(['orderNumber']);
+                        .columns(['orderNumber', 'itemNumber']);
 
-                    const filtered = rows.map(r => r.orderNumber);
-
-                    ordersToUpdate = orders.filter(o => filtered.includes(o));
+                    ordersToUpdate = orders.filter(o => 
+                        rows.some(r => 
+                            r.orderNumber === o.orderNumber && 
+                            r.itemNumber === o.itemNumber
+                        )
+                    );
                 } else {
                     ordersToUpdate = orders;
                 }
@@ -120,28 +126,57 @@ class MyOrderApprovalService extends cds.ApplicationService {
             }
 
             // -------------------------------
-            //  BATCH UPDATE (Fixes packet errors)
+            //  OPTIMIZED UPDATE WITH NATIVE SQL
             // -------------------------------
-            const BATCH_SIZE = 200;
-
-            const chunk = (arr, size) =>
-                arr.reduce((acc, _, i) =>
-                    (i % size ? acc : [...acc, arr.slice(i, i + size)]), []);
-
-            const batches = chunk(ordersToUpdate, BATCH_SIZE);
-
-            const updateData = reasonCode
-                ? { approveLoad, reasonCode }
-                : { approveLoad };
-
             try {
-                for (const batch of batches) {
-                    await UPDATE('strbw.Orders')
-                        .set(updateData)
-                        .where({ orderNumber: { in: batch } });
-                }
+                const db = await cds.connect.to('db');
+                
+                // ✅ Build parameterized SQL query
+                const buildUpdateQuery = (batch) => {
+                    const conditions = batch.map((_, idx) => 
+                        `(orderNumber = ? AND itemNumber = ?)`
+                    ).join(' OR ');
+                    
+                    const params = batch.flatMap(order => [order.orderNumber, order.itemNumber]);
+                    
+                    if (reasonCode) {
+                        return {
+                            sql: `UPDATE strbw_Orders SET approveLoad = ?, reasonCode = ? WHERE ${conditions}`,
+                            params: [approveLoad, reasonCode, ...params]
+                        };
+                    } else {
+                        return {
+                            sql: `UPDATE strbw_Orders SET approveLoad = ? WHERE ${conditions}`,
+                            params: [approveLoad, ...params]
+                        };
+                    }
+                };
 
-                console.log(`✅ Updated ${ordersToUpdate.length} orders in ${batches.length} batches`);
+                // Decide strategy based on volume
+                if (ordersToUpdate.length <= 5000) {
+                    // Single query for small to medium datasets
+                    const query = buildUpdateQuery(ordersToUpdate);
+                    await db.run(query.sql, query.params);
+                    
+                    console.log(`✅ Updated ${ordersToUpdate.length} orders in 1 query`);
+                } else {
+                    // Parallel batch execution for large datasets
+                    const BATCH_SIZE = 1000;
+                    const chunk = (arr, size) =>
+                        arr.reduce((acc, _, i) =>
+                            (i % size ? acc : [...acc, arr.slice(i, i + size)]), []);
+
+                    const batches = chunk(ordersToUpdate, BATCH_SIZE);
+
+                    await Promise.all(
+                        batches.map(batch => {
+                            const query = buildUpdateQuery(batch);
+                            return db.run(query.sql, query.params);
+                        })
+                    );
+                    
+                    console.log(`✅ Updated ${ordersToUpdate.length} orders in ${batches.length} parallel queries`);
+                }
 
                 return {
                     success: true,

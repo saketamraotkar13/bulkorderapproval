@@ -8,7 +8,10 @@ service MyOrderApprovalService {
 
     entity reasonCodeVH          as projection on mydb.reasonCodeVH;
 
-    action approveOrders(orders: array of String,
+    action approveOrders(orders: array of {
+                             orderNumber: String;
+                             itemNumber: String;
+                         },
                          approveLoad: Boolean,
                          reasonCode: String,
                          filters: String,

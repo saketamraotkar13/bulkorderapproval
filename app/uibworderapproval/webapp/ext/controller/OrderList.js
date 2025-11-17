@@ -14,7 +14,13 @@ sap.ui.define([
 
             const oModel = aSelectedContexts[0].getModel();
             const aSelectedOrders = aSelectedContexts.map(ctx => ctx.getObject());
-            const aOrders = aSelectedOrders.map(o => o.orderNumber);
+            
+            // ✅ Pass composite keys (orderNumber + itemNumber)
+            const aOrders = aSelectedOrders.map(o => ({
+                orderNumber: o.orderNumber,
+                itemNumber: o.itemNumber
+            }));
+            
             const countSelectedOrders = aSelectedOrders.length;
 
             // 🔹 Flatten FE filters
@@ -133,7 +139,7 @@ sap.ui.define([
 
                             for (const ordersChunk of chunkedOrders) {
                                 var oAction = oModel.bindContext("/approveOrders(...)");
-                                oAction.setParameter("orders", ordersChunk);
+                                oAction.setParameter("orders", ordersChunk); // ✅ Now contains {orderNumber, itemNumber}
                                 oAction.setParameter("approveLoad", bApproveLoad);
                                 oAction.setParameter("reasonCode", sReasonCode);
                                 oAction.setParameter("filters", JSON.stringify(aFilters));

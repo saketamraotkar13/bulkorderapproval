@@ -357,7 +357,7 @@ annotate service.Orders with @(
     TypeName: 'Order Details',
     TypeNamePlural: 'Orders',
     Title: { Value: orderNumber },
-    Description: { Value: sourceLocation }
+    Description: { Value: itemNumber }
   }
 );
 annotate service.Orders with {
@@ -465,3 +465,16 @@ annotate service.Orders with {
         Common.ValueListWithFixedValues : true,
 )};
 
+annotate service.Orders with @(
+    Common.SemanticKey : [orderNumber, itemNumber],
+    UI.Identification  : [
+        {
+            $Type : 'UI.DataField',
+            Value : orderNumber
+        },
+        {
+            $Type : 'UI.DataField',
+            Value : itemNumber
+        }
+    ]
+);
