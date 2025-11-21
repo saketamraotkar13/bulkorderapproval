@@ -17,6 +17,8 @@ service MyOrderApprovalService {
                          filters: String,
                          allSelected: Boolean) returns String;
 
+// Value helps
+
     entity ProductVH             as
         projection on mydb.Orders {
             key product : String
@@ -66,6 +68,52 @@ service MyOrderApprovalService {
         group by
             orderNumber;
 
+  
+    entity productCategoryVH              as
+        projection on mydb.Orders {
+            key productCategory : String
+        }
+        group by
+            productCategory;
+  
+    entity quantityVH              as
+        projection on mydb.Orders {
+            key quantity : String
+        }
+        group by
+            quantity; 
+    entity uomVH              as
+        projection on mydb.Orders {
+            key uom : String
+        }
+        group by
+            uom;
+   
+    entity destDaySuppVH              as
+        projection on mydb.Orders {
+            key destDaySupp : String
+        }
+        group by
+            destDaySupp;
+  
+    entity destStockOHVH              as
+        projection on mydb.Orders {
+            key destStockOH : String
+        }
+        group by
+            destStockOH;  
+    entity abcClassVH              as
+        projection on mydb.Orders {
+            key abcClass : String
+        }
+        group by
+            abcClass;
+
+    @cds.persistence.skip
+    entity BooleanVH {
+        key code  : Boolean;
+        label     : String;
+    };
 }
 
 

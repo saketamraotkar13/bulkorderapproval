@@ -2,9 +2,23 @@ const cds = require('@sap/cds');
 
 class MyOrderApprovalService extends cds.ApplicationService {
 
-    async init() {
-        await super.init();
+    async init() {        
+        // -------------------------------
+        //  getBooleanVH action
+        // -------------------------------      
+        const { BooleanVH } = this.entities;
+        this.on('READ', 'BooleanVH', async (req) => {
+                    console.log("📖 BooleanVH READ triggered!");
+                  const data = [
+                        { code: true,  label: "Yes" },
+                        { code: false, label: "No" }
+                    ];
+                    return data;
+                });
 
+        // -------------------------------
+        //  approveOrders action
+        // -------------------------------
         this.on('approveOrders', async (req) => {
 
             let { orders, approveLoad, reasonCode, filters, allSelected } = req.data;
@@ -15,9 +29,9 @@ class MyOrderApprovalService extends cds.ApplicationService {
             console.log("allSelected:", allSelected);
 
             const validFields = [
-                'orderNumber','itemNumber','product','sourceLocation','destinationLocation',
-                'mot','quantity','uom','category','categoryDescription','startDate','endDate',
-                'destDaySupp','destStockOH','mot2','abcClass','week','approveLoad','reasonCode'
+                'orderNumber', 'itemNumber', 'product', 'sourceLocation', 'destinationLocation',
+                'mot', 'quantity', 'uom', 'category', 'categoryDescription', 'startDate', 'endDate',
+                'destDaySupp', 'destStockOH', 'mot2', 'abcClass', 'week', 'approveLoad', 'reasonCode'
             ];
 
             let whereConditions = {};
@@ -93,9 +107,9 @@ class MyOrderApprovalService extends cds.ApplicationService {
                     .where(whereConditions)
                     .columns(['orderNumber', 'itemNumber']);
 
-                ordersToUpdate = rows.map(r => ({ 
-                    orderNumber: r.orderNumber, 
-                    itemNumber: r.itemNumber 
+                ordersToUpdate = rows.map(r => ({
+                    orderNumber: r.orderNumber,
+                    itemNumber: r.itemNumber
                 }));
             }
             else {
@@ -110,9 +124,9 @@ class MyOrderApprovalService extends cds.ApplicationService {
                         .where(whereConditions)
                         .columns(['orderNumber', 'itemNumber']);
 
-                    ordersToUpdate = orders.filter(o => 
-                        rows.some(r => 
-                            r.orderNumber === o.orderNumber && 
+                    ordersToUpdate = orders.filter(o =>
+                        rows.some(r =>
+                            r.orderNumber === o.orderNumber &&
                             r.itemNumber === o.itemNumber
                         )
                     );
@@ -130,15 +144,15 @@ class MyOrderApprovalService extends cds.ApplicationService {
             // -------------------------------
             try {
                 const db = await cds.connect.to('db');
-                
+
                 // ✅ Build parameterized SQL query
                 const buildUpdateQuery = (batch) => {
-                    const conditions = batch.map((_, idx) => 
+                    const conditions = batch.map((_, idx) =>
                         `(orderNumber = ? AND itemNumber = ?)`
                     ).join(' OR ');
-                    
+
                     const params = batch.flatMap(order => [order.orderNumber, order.itemNumber]);
-                    
+
                     if (reasonCode) {
                         return {
                             sql: `UPDATE strbw_Orders SET approveLoad = ?, reasonCode = ? WHERE ${conditions}`,
@@ -157,7 +171,7 @@ class MyOrderApprovalService extends cds.ApplicationService {
                     // Single query for small to medium datasets
                     const query = buildUpdateQuery(ordersToUpdate);
                     await db.run(query.sql, query.params);
-                    
+
                     console.log(`✅ Updated ${ordersToUpdate.length} orders in 1 query`);
                 } else {
                     // Parallel batch execution for large datasets
@@ -174,7 +188,7 @@ class MyOrderApprovalService extends cds.ApplicationService {
                             return db.run(query.sql, query.params);
                         })
                     );
-                    
+
                     console.log(`✅ Updated ${ordersToUpdate.length} orders in ${batches.length} parallel queries`);
                 }
 
@@ -189,6 +203,7 @@ class MyOrderApprovalService extends cds.ApplicationService {
             }
 
         });
+        await super.init();
     }
 }
 

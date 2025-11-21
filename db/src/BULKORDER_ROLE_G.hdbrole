@@ -1,0 +1,13 @@
+{
+    "role": {
+        "name": "BULKORDER_ROLE_G#",
+        "object_privileges": [
+            { 
+                "name":"STRBW_ORDERS", 
+                "type":"TABLE", 
+                "privileges":[], 
+                "privileges_with_grant_option":["SELECT"]
+            }                          
+        ]
+    }
+}

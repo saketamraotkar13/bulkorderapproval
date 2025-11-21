@@ -28,7 +28,7 @@
     "requires": {
       "[production]": {
         "db": "hana",
-        "auth": "xsuaa"
+        "auth": "mocked"
       },
       "html5-repo": true,
       "destinations": true,

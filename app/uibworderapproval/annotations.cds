@@ -125,11 +125,15 @@ annotate service.Orders with @(
             },
             {
                 $Type: 'UI.DataField',
-                Value: approveLoad,
+                Value: approveLoad               
             },
             {
                 $Type : 'UI.DataField',
                 Value : mot2,
+            },
+            {
+                $Type : 'UI.DataField',
+                Value : profiteAtRisk,
             },
         ],
     },
@@ -202,7 +206,7 @@ annotate service.Orders with @(
         },
         {
             $Type: 'UI.DataField',
-            Value: approveLoad,
+            Value: approveLoad,            
         },
     ],
     UI.selectionfields : [category, destinationlocation, mot, product, reasoncode, sourcelocation, ordernumber, approveload ],
@@ -215,6 +219,7 @@ annotate service.Orders with @(
         reasonCode,
         sourceLocation,
         destinationLocation,
+        abcClass
     ],
     );
 
@@ -352,6 +357,25 @@ annotate service.MOT2VH with {
     )
 };
 
+annotate service.Orders with {
+    approveLoad @(
+        Common.ValueList : {
+            $Type : 'Common.ValueListType',
+            CollectionPath : 'BooleanVH',
+            Parameters : [
+                {
+                    $Type : 'Common.ValueListParameterInOut',
+                    LocalDataProperty : approveLoad,  
+                    ValueListProperty : 'code',
+                }            
+            ],
+            Label : 'Approve Load',
+        },
+        Common.ValueListWithFixedValues : true,
+    )
+};
+
+
 annotate service.Orders with @(
   UI.HeaderInfo: {
     TypeName: 'Order Details',
@@ -393,7 +417,22 @@ annotate service.Orders with {
 };
 
 annotate service.Orders with {
-    abcClass @Common.FieldControl : #ReadOnly
+    abcClass @(
+        Common.FieldControl : #ReadOnly,
+        Common.ValueList : {
+            $Type : 'Common.ValueListType',
+            CollectionPath : 'abcClassVH',
+            Parameters : [
+                {
+                    $Type : 'Common.ValueListParameterInOut',
+                    LocalDataProperty : abcClass,
+                    ValueListProperty : 'abcClass',
+                },
+            ],
+            Label : 'ABC Class',
+        },
+        Common.ValueListWithFixedValues : true,
+    )
 };
 
 annotate service.Orders with {
@@ -460,7 +499,7 @@ annotate service.Orders with {
                     ValueListProperty : 'MOT2',
                 },
             ],
-            Label : 'MOT2VH',
+            Label : '{i18n>Mot2vh}',
         },
         Common.ValueListWithFixedValues : true,
 )};
@@ -478,3 +517,23 @@ annotate service.Orders with @(
         }
     ]
 );
+annotate service.Orders with {
+    reasonCode @(
+        Common.ValueList : {
+            $Type : 'Common.ValueListType',
+            CollectionPath : 'reasonCodeVH',
+            Parameters : [
+                {
+                    $Type : 'Common.ValueListParameterInOut',
+                    LocalDataProperty : reasonCode,
+                    ValueListProperty : 'reasonCode',
+                },
+            ],
+            Label : 'Reason Code',
+        },
+        Common.ValueListWithFixedValues : true,
+)};
+annotate service.Orders with {
+    profiteAtRisk @Common.FieldControl : #ReadOnly
+};
+

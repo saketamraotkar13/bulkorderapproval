@@ -1,0 +1,13 @@
+{
+    "role": {
+        "name": "BULKORDER_ROLE",
+        "object_privileges": [
+            { 
+                "name":"STRBW_ORDERS", 
+                "type":"TABLE", 
+                "privileges":[ "SELECT" ], 
+                "privileges_with_grant_option":[] 
+            }                          
+        ]
+    }
+}

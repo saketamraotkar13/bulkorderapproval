@@ -48,6 +48,8 @@ entity Orders {
     productCategory          : String;
     @title : 'Estimated Risk'
     estimatedRisk            : String;
+    @title : 'Profit At Risk'
+    profiteAtRisk            : String;
     @title : 'Cost Delta'
     costDelta                : String;
     @title : 'Impact Amount'
