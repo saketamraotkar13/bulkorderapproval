@@ -3,59 +3,80 @@ const cds = require('@sap/cds');
 class MyOrderApprovalService extends cds.ApplicationService {
 
     async init() {        
-        // -------------------------------
-        //  getBooleanVH action
-        // -------------------------------      
         const { BooleanVH, Orders } = this.entities;
 
-                // -------------------------------
+        // -------------------------------
+        //  Validation: Approval & Reason Code Logic
+        // -------------------------------
+        // this.before(['CREATE', 'UPDATE'], 'Orders', async (req) => {
+        //     const { approveLoad, reasonCode } = req.data;
+            
+        //     console.log(`📝 Validation triggered: approveLoad=${approveLoad}, reasonCode=${reasonCode}`);
+            
+        //     // Rule 1: If approving (true), reasonCode must be cleared
+        //     if (approveLoad === true && reasonCode) {
+        //         req.data.reasonCode = null; // Clear it automatically
+        //         console.log("✅ Order approved: reasonCode cleared");
+        //     }
+            
+        //     // Rule 2: If rejecting (false), reasonCode is mandatory
+        //     if (approveLoad === false && (!reasonCode || reasonCode.trim() === '')) {
+        //         return req.error(400, 'Reason Code is required when rejecting an order (approveLoad = false).');
+        //     }
+            
+        //     // Rule 3: If pending (null/undefined), reasonCode should be empty
+        //     if (approveLoad === null || approveLoad === undefined) {
+        //         req.data.reasonCode = null;
+        //         console.log("⏳ Order pending: reasonCode cleared");
+        //     }
+        // });
+
+
+        // -------------------------------
         //  getApprovalStats function
         // -------------------------------
         this.on('getApprovalStats', async (req) => {
             console.log("📊 getApprovalStats invoked");
 
             try {
-                // Get total count
-                const totalResult = await SELECT.from(Orders).columns('count(*) as count');
-                const totalOrders = totalResult[0].count || 0;
+                const result = await SELECT.one.from(Orders).columns(
+                    'count(*) as totalOrders',
+                    `sum(case when approveLoad = true  then 1 else 0 end) as approvedOrders`,
+                    `sum(case when approveLoad = false then 1 else 0 end) as rejectedOrders`,
+                    `sum(case when approveLoad is null then 1 else 0 end) as pendingOrders`,
+                    'sum(quantity) as sumOfQuantity'
+                );
 
-                // Get approved count (approveLoad = true)
-                const approvedResult = await SELECT.from(Orders)
-                    .where({ approveLoad: true })
-                    .columns('count(*) as count');
-                const approvedOrders = approvedResult[0].count || 0;
+                // Calculate percentages
+                const total = result.totalOrders || 0;
+                const approved = result.approvedOrders || 0;
+                const rejected = result.rejectedOrders || 0;
+                const pending = result.pendingOrders || 0;
 
-                // Get rejected count (approveLoad = false)
-                const rejectedResult = await SELECT.from(Orders)
-                    .where({ approveLoad: false })
-                    .columns('count(*) as count');
-                const rejectedOrders = rejectedResult[0].count || 0;
-
-                // Get pending count (approveLoad = null)
-                const pendingResult = await SELECT.from(Orders)
-                    .where({ approveLoad: null })
-                    .columns('count(*) as count');
-                const pendingOrders = pendingResult[0].count || 0;
-
-                console.log(`📊 Stats: Total=${totalOrders}, Approved=${approvedOrders}, Rejected=${rejectedOrders}, Pending=${pendingOrders}`);
+                const approvalRate = total > 0 ? ((approved / total) * 100).toFixed(2) : 0;
+                const rejectionRate = total > 0 ? ((rejected / total) * 100).toFixed(2) : 0;
+                const pendingRate = total > 0 ? ((pending / total) * 100).toFixed(2) : 0;
 
                 return {
-                    totalOrders,
-                    approvedOrders,
-                    rejectedOrders,
-                    pendingOrders
+                    totalOrders: total,
+                    approvedOrders: approved,
+                    rejectedOrders: rejected,
+                    pendingOrders: pending,
+                    approvalRate: parseFloat(approvalRate),
+                    rejectionRate: parseFloat(rejectionRate),
+                    pendingRate: parseFloat(pendingRate),
+                    sumOfQuantity: parseFloat(Number(result.sumOfQuantity || 0).toFixed(3))
                 };
 
             } catch (err) {
                 console.error("❌ Error fetching approval stats:", err);
-                req.error(500, "Failed to fetch approval statistics: " + err.message);
+                return req.error(500, "Failed to fetch approval statistics: " + err.message);
             }
         });
 
         // -------------------------------
         //  Boolean Values
         // -------------------------------
-
         this.on('READ', 'BooleanVH', async (req) => {
             console.log("📖 BooleanVH READ triggered!");
             const data = [

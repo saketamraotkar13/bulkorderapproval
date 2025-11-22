@@ -252,12 +252,12 @@ annotate service.Orders with @(
             },
             {
                 $Type: 'UI.DataField',
-                Value: fastestMOT,              // ✅ Fixed
+                Value: fastestMOT,
                 Label: 'Fastest MOT',
             },
             {
                 $Type: 'UI.DataField',
-                Value: fastestMOTDurationDays,  // ✅ Fixed
+                Value: fastestMOTDurationDays,
                 Label: 'Fastest MOT Duration (Days)',
             },
             {
@@ -267,7 +267,7 @@ annotate service.Orders with @(
             },
             {
                 $Type: 'UI.DataField',
-                Value: slowestMOTDurationDays,  // ✅ Fixed
+                Value: slowestMOTDurationDays,
                 Label: 'Slowest MOT Duration (Days)',
             },
         ],
@@ -278,12 +278,12 @@ annotate service.Orders with @(
         Data : [
             {
                 $Type: 'UI.DataField',
-                Value: fastestMOTCost,          // ✅ Fixed
+                Value: fastestMOTCost,
                 Label: 'Fastest MOT Cost',
             },
             {
                 $Type: 'UI.DataField',
-                Value: slowestMOTCost,          // ✅ Fixed
+                Value: slowestMOTCost,
                 Label: 'Slowest MOT Cost',
             },
             {
@@ -559,6 +559,59 @@ annotate service.Orders with {
 };
 
 // ========================================
+// Number Formatting for Decimal Fields
+// ========================================
+
+annotate service.Orders with {
+    quantity @(
+        Common.Label: 'Quantity',
+        Measures.Unit: uom,
+        UI.HiddenFilter: false
+    );
+    
+    destDaySupp @(
+        Common.Label: 'Destination Day Supply',
+        UI.HiddenFilter: false
+    );
+    
+    destStockOH @(
+        Common.Label: 'Destination Stock On Hand',
+        Measures.Unit: uom,
+        UI.HiddenFilter: false
+    );
+    
+    estimatedRisk @(
+        Common.Label: 'Estimated Risk ($)',
+        UI.HiddenFilter: false
+    );
+    
+    profitAtRisk @(
+        Common.Label: 'Profit At Risk ($)',
+        UI.HiddenFilter: false
+    );
+    
+    costDelta @(
+        Common.Label: 'Cost Delta ($)',
+        UI.HiddenFilter: false
+    );
+    
+    impactAmount @(
+        Common.Label: 'Impact Amount ($)',
+        UI.HiddenFilter: false
+    );
+    
+    fastestMOTCost @(
+        Common.Label: 'Fastest MOT Cost ($)',
+        UI.HiddenFilter: false
+    );
+    
+    slowestMOTCost @(
+        Common.Label: 'Slowest MOT Cost ($)',
+        UI.HiddenFilter: false
+    );
+};
+
+// ========================================
 // Field Control (Read-Only Fields)
 // ========================================
 
@@ -572,12 +625,12 @@ annotate service.Orders with {
     destDaySupp               @Common.FieldControl : #ReadOnly;
     destStockOH               @Common.FieldControl : #ReadOnly;
     week                      @Common.FieldControl : #ReadOnly;
-    fastestMOT                @Common.FieldControl : #ReadOnly;  // ✅ Fixed
-    fastestMOTCost            @Common.FieldControl : #ReadOnly;  // ✅ Fixed
-    fastestMOTDurationDays    @Common.FieldControl : #ReadOnly;  // ✅ Fixed
+    fastestMOT                @Common.FieldControl : #ReadOnly;
+    fastestMOTCost            @Common.FieldControl : #ReadOnly;
+    fastestMOTDurationDays    @Common.FieldControl : #ReadOnly;
     slowestMOT                @Common.FieldControl : #ReadOnly;
-    slowestMOTCost            @Common.FieldControl : #ReadOnly;  // ✅ Fixed
-    slowestMOTDurationDays    @Common.FieldControl : #ReadOnly;  // ✅ Fixed
+    slowestMOTCost            @Common.FieldControl : #ReadOnly;
+    slowestMOTDurationDays    @Common.FieldControl : #ReadOnly;
     impactAmount              @Common.FieldControl : #ReadOnly;
     productCategory           @Common.FieldControl : #ReadOnly;
     estimatedRisk             @Common.FieldControl : #ReadOnly;

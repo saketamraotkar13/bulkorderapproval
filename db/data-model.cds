@@ -14,7 +14,7 @@ entity Orders {
     @title: 'Mode of Transport'
     mot                       : String;
     @title: 'Quantity'
-    quantity                  : Decimal;
+    quantity                  : Decimal(17,3);
     @title: 'Unit of Measure'
     uom                       : String;
     @title: 'Category'
@@ -26,9 +26,9 @@ entity Orders {
     @title: 'End Date'
     endDate                   : String;
     @title: 'Destination Day Supply'
-    destDaySupp               : Integer;
+    destDaySupp               : Decimal(18,3);
     @title: 'Destination Stock On Hand'
-    destStockOH               : Decimal;
+    destStockOH               : Decimal(18,3);
     @title: 'MOT2'
     mot2                      : String;
     @title: 'ABC Class'
@@ -47,17 +47,17 @@ entity Orders {
     @title: 'Product Category'
     productCategory          : String;
     @title : 'Estimated Risk'
-    estimatedRisk            : String;
+    estimatedRisk            : Decimal(15,2);
     @title : 'Profit At Risk'
-    profitAtRisk            : String;
+    profitAtRisk            : Decimal(17,3);
     @title : 'Cost Delta'
-    costDelta                : String;
+    costDelta                : Decimal(17,3);
     @title : 'Impact Amount'
-    impactAmount            : String;
+    impactAmount            : Decimal(17,3);
     @title: 'Fasted MOT Cost'
-    fastestMOTCost           : String;
+    fastestMOTCost           : Decimal(17,3);
     @title : 'Slowest MOT Cost'
-    slowestMOTCost          : String;
+    slowestMOTCost          : Decimal(17,3);
     @title: 'Fastest MOT Duration Days'
     fastestMOTDurationDays       : String;
     @title: 'Slowest MOT Duration Days'

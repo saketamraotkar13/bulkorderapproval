@@ -1,57 +1,135 @@
 <core:FragmentDefinition
-    xmlns:core="sap.ui.core"
-    xmlns="sap.m"
-    xmlns:f="sap.f"
-    xmlns:card="sap.f.cards">
-    
-    <VBox class="sapUiSmallMargin">
-        <HBox class="sapUiSmallMarginBottom">
-            <items>
-                <!-- Total Orders Card -->
-                <f:Card width="250px" class="sapUiTinyMarginEnd">
-                    <f:header>
-                        <card:NumericHeader
-                            title="Total Orders"
-                            number="{stats>/totalOrders}"
-                            state="None"
-                            iconSrc="sap-icon://order-status" />
-                    </f:header>
-                </f:Card>
-                
-                <!-- Approved Orders Card -->
-                <f:Card width="250px" class="sapUiTinyMarginEnd">
-                    <f:header>
-                        <card:NumericHeader
-                            title="Approved Orders"
-                            number="{stats>/approvedOrders}"
-                            state="Success"
-                            iconSrc="sap-icon://accept" />
-                    </f:header>
-                </f:Card>
-                
-                <!-- Rejected Orders Card -->
-                <f:Card width="250px" class="sapUiTinyMarginEnd">
-                    <f:header>
-                        <card:NumericHeader
-                            title="Rejected Orders"
-                            number="{stats>/rejectedOrders}"
-                            state="Error"
-                            iconSrc="sap-icon://decline" />
-                    </f:header>
-                </f:Card>
-                
-                <!-- Pending Orders Card -->
-                <f:Card width="250px">
-                    <f:header>
-                        <card:NumericHeader
-                            title="Pending Orders"
-                            number="{stats>/pendingOrders}"
-                            state="Warning"
-                            iconSrc="sap-icon://pending" />
-                    </f:header>
-                </f:Card>
-            </items>
-        </HBox>
-    </VBox>
-    
+	xmlns="sap.m"
+	xmlns:core="sap.ui.core"
+	xmlns:mvc="sap.ui.core.mvc"
+	xmlns:layout="sap.ui.layout"
+	xmlns:viz="sap.viz.ui5.controls"
+	xmlns:viz.feeds="sap.viz.ui5.controls.common.feeds"
+	xmlns:viz.data="sap.viz.ui5.data">
+
+	<Dialog
+		id="ShowTablePop"
+		title="📊 Order Approval Dashboard"
+		contentWidth="90%"
+		contentHeight="700px"
+		draggable="true"
+		resizable="true"
+		core:require="{handler: 'uibworderapproval/ext/controller/OrderList'}">
+
+		<content>
+			<layout:VerticalLayout class="sapUiContentPadding" width="100%">
+				
+				<!-- Header -->
+				<Label 
+					text="Order Approval Statistics" 
+					design="Bold" 
+					class="sapUiSmallMarginBottom"/>
+				
+				<!-- Timestamp -->
+				<Toolbar class="sapUiTinyMarginTop">
+					<ToolbarSpacer/>
+					<Text text="Last updated: {kpi>/lastUpdated}"/>
+				</Toolbar>
+
+				<!-- Large Donut Chart with Count -->
+				<layout:VerticalLayout width="100%" class="sapUiSmallMarginTop">
+					<Title text="Order Status Distribution" level="H4" class="sapUiSmallMarginBottom"/>
+					<viz:VizFrame
+						id="donutChart"
+						uiConfig="{applicationSet:'fiori'}"
+						height="450px"
+						width="100%"
+						vizType="donut"
+						vizProperties="{
+							title: {
+								visible: false
+							},
+							plotArea: {
+								dataLabel: {
+									visible: true,
+									type: 'value',
+									formatString: '#,##0'
+								},
+								innerRadius: 0.6
+							},
+							legend: {
+								visible: true,
+								position: 'right'
+							}
+						}">
+						<viz:dataset>
+							<viz.data:FlattenedDataset data="{kpi>/chartData}">
+								<viz.data:dimensions>
+									<viz.data:DimensionDefinition name="Status" value="{kpi>status}"/>
+								</viz.data:dimensions>
+								<viz.data:measures>
+									<viz.data:MeasureDefinition name="Count" value="{kpi>count}"/>
+								</viz.data:measures>
+							</viz.data:FlattenedDataset>
+						</viz:dataset>
+						<viz:feeds>
+							<viz.feeds:FeedItem uid="size" type="Measure" values="Count"/>
+							<viz.feeds:FeedItem uid="color" type="Dimension" values="Status"/>
+						</viz:feeds>
+					</viz:VizFrame>
+				</layout:VerticalLayout>
+				
+				<!-- Statistics Table -->
+				<Table class="sapUiSmallMarginTop">
+					<columns>
+						<Column width="50%">
+							<header>
+								<Label text="Metric"/>
+							</header>
+						</Column>
+						<Column width="25%" hAlign="End">
+							<header>
+								<Label text="Count"/>
+							</header>
+						</Column>
+						<Column width="25%" hAlign="End">
+							<header>
+								<Label text="Percentage"/>
+							</header>
+						</Column>
+					</columns>
+					<items>
+						<ColumnListItem>
+							<cells>
+								<Text text="Total Orders"/>
+								<ObjectNumber number="{kpi>/totalOrders}" state="None"/>
+								<Text text="100.00%"/>
+							</cells>
+						</ColumnListItem>
+						<ColumnListItem>
+							<cells>
+								<Text text="Approved Orders"/>
+								<ObjectNumber number="{kpi>/approvedOrders}" state="Success"/>
+								<Text text="{kpi>/approvalRate}%"/>
+							</cells>
+						</ColumnListItem>
+						<ColumnListItem>
+							<cells>
+								<Text text="Rejected Orders"/>
+								<ObjectNumber number="{kpi>/rejectedOrders}" state="Error"/>
+								<Text text="{kpi>/rejectionRate}%"/>
+							</cells>
+						</ColumnListItem>
+						<ColumnListItem>
+							<cells>
+								<Text text="Pending Orders"/>
+								<ObjectNumber number="{kpi>/pendingOrders}" state="Warning"/>
+								<Text text="{kpi>/pendingRate}%"/>
+							</cells>
+						</ColumnListItem>
+					</items>
+				</Table>
+				
+			</layout:VerticalLayout>
+		</content>
+
+		<endButton>
+			<Button text="Close" press="handler.onCloseTableDialog"/>
+		</endButton>
+	</Dialog>
 </core:FragmentDefinition>

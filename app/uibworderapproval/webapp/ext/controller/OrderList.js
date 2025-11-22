@@ -2,8 +2,6 @@ sap.ui.define([
     "sap/m/MessageToast",
     "sap/m/MessageBox",
     "sap/ui/core/Fragment"
-
-
 ], function (MessageToast, MessageBox, Fragment) {
     'use strict';
 
@@ -47,6 +45,7 @@ sap.ui.define([
                                 approvalRate: oKPIData.approvalRate || 0,
                                 rejectionRate: oKPIData.rejectionRate || 0,
                                 pendingRate: oKPIData.pendingRate || 0,
+                                sumOfQuantity: oKPIData.sumOfQuantity || 0,
                                 lastUpdated: new Date().toLocaleString(),
                                 // ✅ Chart data format
                                 chartData: [
@@ -84,6 +83,7 @@ sap.ui.define([
                             approvalRate: oKPIData.approvalRate || 0,
                             rejectionRate: oKPIData.rejectionRate || 0,
                             pendingRate: oKPIData.pendingRate || 0,
+                            sumOfQuantity: oKPIData.sumOfQuantity || 0,
                             lastUpdated: new Date().toLocaleString(),
                             chartData: [
                                 {
@@ -292,6 +292,5 @@ sap.ui.define([
             oDialog.addStyleClass("sapUiContentPadding sapUiSizeCompact");
             oDialog.open();
         }
-
     };
 });

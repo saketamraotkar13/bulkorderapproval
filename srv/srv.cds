@@ -3,108 +3,123 @@ using {strbw as mydb} from '../db/data-model';
 service MyOrderApprovalService {
     @odata.draft.bypass
     @odata.draft.enabled
-    entity Orders as projection on mydb.Orders;
+    entity Orders                as projection on mydb.Orders;
 
-    entity reasonCodeVH as projection on mydb.reasonCodeVH;
+    entity reasonCodeVH          as projection on mydb.reasonCodeVH;
 
-    action approveOrders(
-        orders: array of {
-            orderNumber: String;
-            itemNumber: String;
-        },
-        approveLoad: Boolean,
-        reasonCode: String,
-        filters: String,
-        allSelected: Boolean
-    ) returns String;
+    action   approveOrders(orders: array of {
+        orderNumber : String;
+        itemNumber  : String;
+    },
+                           approveLoad: Boolean,
+                           reasonCode: String,
+                           filters: String,
+                           allSelected: Boolean) returns String;
 
-   // ✅ New function to get approval statistics
-    function getApprovalStats() returns {
-        totalOrders: Integer;
-        approvedOrders: Integer;
-        rejectedOrders: Integer;
-        pendingOrders: Integer;
+    // Function to get approval statistics
+    function getApprovalStats()                  returns {
+        totalOrders       : Integer;
+        approvedOrders    : Integer;
+        rejectedOrders    : Integer;
+        pendingOrders     : Integer;
+        approvalRate      : Decimal(5, 2);
+        rejectionRate     : Decimal(5, 2);
+        pendingRate       : Decimal(5, 2);
+        sumOfQuantity     : Decimal(20, 3);
     };
 
 
     // Value helps
-    entity ProductVH as
+    entity ProductVH             as
         projection on mydb.Orders {
             key product : String
         }
-        group by product;
+        group by
+            product;
 
-    entity MOT2VH as
+    entity MOT2VH                as
         projection on mydb.mot2VH {
             key MOT2 : String
         }
-        group by MOT2;
+        group by
+            MOT2;
 
-    entity MOTVH as
+    entity MOTVH                 as
         projection on mydb.Orders {
             key mot : String
         }
-        group by mot;
+        group by
+            mot;
 
-    entity sourceLocationVH as
+    entity sourceLocationVH      as
         projection on mydb.Orders {
             key sourceLocation : String
         }
-        group by sourceLocation;
+        group by
+            sourceLocation;
 
     entity destinationLocationVH as
         projection on mydb.Orders {
             key destinationLocation : String
         }
-        group by destinationLocation;
+        group by
+            destinationLocation;
 
-    entity categoryVH as
+    entity categoryVH            as
         projection on mydb.Orders {
             key category : String
         }
-        group by category;
+        group by
+            category;
 
-    entity OrdersVH as
+    entity OrdersVH              as
         projection on mydb.Orders {
             key orderNumber : String
         }
-        group by orderNumber;
+        group by
+            orderNumber;
 
-    entity productCategoryVH as
+    entity productCategoryVH     as
         projection on mydb.Orders {
             key productCategory : String
         }
-        group by productCategory;
+        group by
+            productCategory;
 
-    entity quantityVH as
+    entity quantityVH            as
         projection on mydb.Orders {
-            key quantity : Decimal  // ✅ Fixed: was String, should be Decimal
+            key quantity : Decimal(17,3)
         }
-        group by quantity;
+        group by
+            quantity;
 
-    entity uomVH as
+    entity uomVH                 as
         projection on mydb.Orders {
             key uom : String
         }
-        group by uom;
+        group by
+            uom;
 
-    entity destDaySuppVH as
+    entity destDaySuppVH         as
         projection on mydb.Orders {
-            key destDaySupp : Integer
+            key destDaySupp : Decimal(18,3)
         }
-        group by destDaySupp;
+        group by
+            destDaySupp;
 
-    entity destStockOHVH as
+    entity destStockOHVH         as
         projection on mydb.Orders {
-            key destStockOH : Decimal
+            key destStockOH : Decimal(18,3)
         }
-        group by destStockOH;
+        group by
+            destStockOH;
 
-    entity abcClassVH as
+    entity abcClassVH            as
         projection on mydb.Orders {
             key abcClass : String
         }
-        group by abcClass;
+        group by
+            abcClass;
 
     @cds.persistence.skip
     entity BooleanVH {
@@ -115,6 +130,6 @@ service MyOrderApprovalService {
 
 // Capabilities
 annotate MyOrderApprovalService.Orders with @(
-    Capabilities.DeleteRestrictions : {Deletable: false},
-    Capabilities.InsertRestrictions : {Insertable: false}
+    Capabilities.DeleteRestrictions: {Deletable: false},
+    Capabilities.InsertRestrictions: {Insertable: false}
 );
