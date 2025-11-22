@@ -17,7 +17,7 @@
     },
     "dataSources": {
       "mainService": {
-        "uri": "odata/v4/my-order-approval/",
+        "uri": "/odata/v4/my-order-approval/",
         "type": "OData",
         "settings": {
           "annotations": [],
@@ -135,6 +135,17 @@
                       "enabled": true,
                       "requiresSelection": true,
                       "text": "Mass Approval"
+                    },
+                    "ShowKPI": {
+                      "press": "uibworderapproval.ext.controller.OrderList.onShowKPIs",
+                      "visible": true,
+                      "enabled": true,
+                      "requiresSelection": false,
+                      "text": "Show KPIs",
+                      "position": {
+                        "placement": "Before",
+                        "anchor": "bulkapproval"
+                      }
                     }
                   }
                 }

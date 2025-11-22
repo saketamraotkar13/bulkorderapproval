@@ -52,7 +52,9 @@ class MyOrderApprovalService extends cds.ApplicationService {
             }
         });
 
-
+        // -------------------------------
+        //  Boolean Values
+        // -------------------------------
 
         this.on('READ', 'BooleanVH', async (req) => {
             console.log("📖 BooleanVH READ triggered!");

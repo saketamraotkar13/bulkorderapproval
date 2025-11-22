@@ -1,10 +1,124 @@
 sap.ui.define([
     "sap/m/MessageToast",
-    "sap/m/MessageBox"
-], function (MessageToast, MessageBox) {
+    "sap/m/MessageBox",
+    "sap/ui/core/Fragment"
+
+
+], function (MessageToast, MessageBox, Fragment) {
     'use strict';
-    
+
     return {
+
+        onShowKPIs: function (oEvent, oEvt) {
+            MessageToast.show("Loading KPI Dashboard...");
+            
+            var oModel = this.getModel();
+            var that = this;
+            
+            // Show busy indicator
+            sap.ui.core.BusyIndicator.show(0);
+
+            // Call CAP function to get KPI data
+            var oFunctionContext = oModel.bindContext("/getApprovalStats(...)");
+
+            oFunctionContext.execute()
+                .then(function () {
+                    // Get the data
+                    var oKPIData = oFunctionContext.getBoundContext().getObject();
+                    console.log("📊 KPI Data received:", oKPIData);
+                    
+                    sap.ui.core.BusyIndicator.hide();
+                    
+                    // Open dialog with data
+                    if (!that._kpiDialog) {
+                        Fragment.load({
+                            id: "kpiFragment",
+                            name: "uibworderapproval.ext.fragments.ApprovalStats",
+                            controller: that
+                        }).then(function (oDialog) {
+                            that._kpiDialog = oDialog;
+                            
+                            // ✅ Create and set KPI model with chart data
+                            var oKPIModel = new sap.ui.model.json.JSONModel({
+                                totalOrders: oKPIData.totalOrders || 0,
+                                approvedOrders: oKPIData.approvedOrders || 0,
+                                rejectedOrders: oKPIData.rejectedOrders || 0,
+                                pendingOrders: oKPIData.pendingOrders || 0,
+                                approvalRate: oKPIData.approvalRate || 0,
+                                rejectionRate: oKPIData.rejectionRate || 0,
+                                pendingRate: oKPIData.pendingRate || 0,
+                                lastUpdated: new Date().toLocaleString(),
+                                // ✅ Chart data format
+                                chartData: [
+                                    {
+                                        status: "Approved",
+                                        count: oKPIData.approvedOrders || 0
+                                    },
+                                    {
+                                        status: "Rejected",
+                                        count: oKPIData.rejectedOrders || 0
+                                    },
+                                    {
+                                        status: "Pending",
+                                        count: oKPIData.pendingOrders || 0
+                                    }
+                                ]
+                            });
+                            
+                            that._kpiDialog.setModel(oKPIModel, "kpi");
+                            that._kpiDialog.open();
+                            
+                            console.log("✅ Dialog opened with KPI data");
+                        }).catch(function (error) {
+                            console.error("❌ Error loading fragment:", error);
+                            MessageBox.error("Failed to load fragment: " + error.message);
+                        });
+                    } else {
+                        // ✅ Dialog exists - update data and reopen
+                        var oKPIModel = that._kpiDialog.getModel("kpi");
+                        oKPIModel.setData({
+                            totalOrders: oKPIData.totalOrders || 0,
+                            approvedOrders: oKPIData.approvedOrders || 0,
+                            rejectedOrders: oKPIData.rejectedOrders || 0,
+                            pendingOrders: oKPIData.pendingOrders || 0,
+                            approvalRate: oKPIData.approvalRate || 0,
+                            rejectionRate: oKPIData.rejectionRate || 0,
+                            pendingRate: oKPIData.pendingRate || 0,
+                            lastUpdated: new Date().toLocaleString(),
+                            chartData: [
+                                {
+                                    status: "Approved",
+                                    count: oKPIData.approvedOrders || 0
+                                },
+                                {
+                                    status: "Rejected",
+                                    count: oKPIData.rejectedOrders || 0
+                                },
+                                {
+                                    status: "Pending",
+                                    count: oKPIData.pendingOrders || 0
+                                }
+                            ]
+                        });
+
+                        that._kpiDialog.open();
+                        console.log("✅ Dialog reopened with refreshed data");
+                    }
+                })
+                .catch(function (oError) {
+                    sap.ui.core.BusyIndicator.hide();
+                    console.error("❌ Failed to load KPI data:", oError);
+                    MessageBox.error("Failed to load KPI statistics: " + (oError.message || "Unknown error"));
+                });
+        },
+
+        onCloseTableDialog: function () {
+            if (this._kpiDialog) {
+                this._kpiDialog.close();
+            }
+        },
+
+        //---------------Bulk Order Approval-------------------------//        
 
         onBulkApproval: async function (oContext, aSelectedContexts) {
             if (!aSelectedContexts || aSelectedContexts.length === 0) {
@@ -14,17 +128,17 @@ sap.ui.define([
 
             const oModel = aSelectedContexts[0].getModel();
             const aSelectedOrders = aSelectedContexts.map(ctx => ctx.getObject());
-            
-            // ✅ Pass composite keys (orderNumber + itemNumber)
+
+            // Pass composite keys (orderNumber + itemNumber)
             const aOrders = aSelectedOrders.map(o => ({
                 orderNumber: o.orderNumber,
                 itemNumber: o.itemNumber
             }));
-            
+
             const countSelectedOrders = aSelectedOrders.length;
 
             // 🔹 Flatten FE filters
-            const flattenFilters = function(oFilter) {
+            const flattenFilters = function (oFilter) {
                 let aResult = [];
                 if (!oFilter) return aResult;
                 if (oFilter.aFilters && oFilter.aFilters.length > 0) {
@@ -69,7 +183,7 @@ sap.ui.define([
                 }
             });
 
-            oApproveCheckbox.attachSelect(function(oEvent){
+            oApproveCheckbox.attachSelect(function (oEvent) {
                 var bApprove = oEvent.getParameter("selected");
                 oReasonCombo.setEnabled(!bApprove);
                 oReasonCombo.setRequired(!bApprove);
@@ -93,7 +207,7 @@ sap.ui.define([
             });
 
             // toggle visibility of selected count
-            oSelectAllCheckbox.attachSelect(function(oEvent) {
+            oSelectAllCheckbox.attachSelect(function (oEvent) {
                 oCountOrders.setVisible(!oEvent.getParameter("selected"));
             });
 
