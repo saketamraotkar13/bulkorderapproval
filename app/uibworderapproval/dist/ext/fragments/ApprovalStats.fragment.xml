@@ -1,0 +1,57 @@
+<core:FragmentDefinition
+    xmlns:core="sap.ui.core"
+    xmlns="sap.m"
+    xmlns:f="sap.f"
+    xmlns:card="sap.f.cards">
+    
+    <VBox class="sapUiSmallMargin">
+        <HBox class="sapUiSmallMarginBottom">
+            <items>
+                <!-- Total Orders Card -->
+                <f:Card width="250px" class="sapUiTinyMarginEnd">
+                    <f:header>
+                        <card:NumericHeader
+                            title="Total Orders"
+                            number="{stats>/totalOrders}"
+                            state="None"
+                            iconSrc="sap-icon://order-status" />
+                    </f:header>
+                </f:Card>
+                
+                <!-- Approved Orders Card -->
+                <f:Card width="250px" class="sapUiTinyMarginEnd">
+                    <f:header>
+                        <card:NumericHeader
+                            title="Approved Orders"
+                            number="{stats>/approvedOrders}"
+                            state="Success"
+                            iconSrc="sap-icon://accept" />
+                    </f:header>
+                </f:Card>
+                
+                <!-- Rejected Orders Card -->
+                <f:Card width="250px" class="sapUiTinyMarginEnd">
+                    <f:header>
+                        <card:NumericHeader
+                            title="Rejected Orders"
+                            number="{stats>/rejectedOrders}"
+                            state="Error"
+                            iconSrc="sap-icon://decline" />
+                    </f:header>
+                </f:Card>
+                
+                <!-- Pending Orders Card -->
+                <f:Card width="250px">
+                    <f:header>
+                        <card:NumericHeader
+                            title="Pending Orders"
+                            number="{stats>/pendingOrders}"
+                            state="Warning"
+                            iconSrc="sap-icon://pending" />
+                    </f:header>
+                </f:Card>
+            </items>
+        </HBox>
+    </VBox>
+    
+</core:FragmentDefinition>

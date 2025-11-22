@@ -40,28 +40,28 @@ entity Orders {
     @title: 'Reason Code'
     reasonCode                : String;
 //new fields    
-    @titile: 'Fasted MOT'
-    fastedMOT                 : String;
-    @titile: 'Slowest MOT'
+    @title: 'Fastest MOT'
+    fastestMOT               : String;
+    @title: 'Slowest MOT'
     slowestMOT                : String;
-    @titile: 'Product Category'
+    @title: 'Product Category'
     productCategory          : String;
     @title : 'Estimated Risk'
     estimatedRisk            : String;
     @title : 'Profit At Risk'
-    profiteAtRisk            : String;
+    profitAtRisk            : String;
     @title : 'Cost Delta'
     costDelta                : String;
     @title : 'Impact Amount'
     impactAmount            : String;
     @title: 'Fasted MOT Cost'
-    fastedMotCost           : String;
+    fastestMOTCost           : String;
     @title : 'Slowest MOT Cost'
-    slowestMotCost          : String;
+    slowestMOTCost          : String;
     @title: 'Fastest MOT Duration Days'
-    fastedMotDurationDays       : String;
+    fastestMOTDurationDays       : String;
     @title: 'Slowest MOT Duration Days'
-    slowestMotDurationDays      : String;
+    slowestMOTDurationDays      : String;
     @title : 'AI Reason'
     aiReason                    : String;
     @title: 'AI Output'

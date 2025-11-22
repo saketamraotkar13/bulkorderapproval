@@ -73,6 +73,10 @@ sap.ui.define([
                 var bApprove = oEvent.getParameter("selected");
                 oReasonCombo.setEnabled(!bApprove);
                 oReasonCombo.setRequired(!bApprove);
+                // ✅ Clear reason code when approving
+                if (bApprove) {
+                    oReasonCombo.setSelectedKey("");
+                }
             });
 
             var oSelectAllCheckbox = new sap.m.CheckBox({
@@ -139,9 +143,10 @@ sap.ui.define([
 
                             for (const ordersChunk of chunkedOrders) {
                                 var oAction = oModel.bindContext("/approveOrders(...)");
-                                oAction.setParameter("orders", ordersChunk); // ✅ Now contains {orderNumber, itemNumber}
+                                oAction.setParameter("orders", ordersChunk);
                                 oAction.setParameter("approveLoad", bApproveLoad);
-                                oAction.setParameter("reasonCode", sReasonCode);
+                                // ✅ Only pass reasonCode if not approving
+                                oAction.setParameter("reasonCode", bApproveLoad ? "" : sReasonCode);
                                 oAction.setParameter("filters", JSON.stringify(aFilters));
                                 oAction.setParameter("allSelected", bSelectAll);
 
@@ -172,24 +177,6 @@ sap.ui.define([
             oDialog.setModel(oModel);
             oDialog.addStyleClass("sapUiContentPadding sapUiSizeCompact");
             oDialog.open();
-        },
-
-        _flattenFilters: function(oFilter) {
-            let aResult = [];
-            if (!oFilter) return aResult;
-            if (oFilter.aFilters && oFilter.aFilters.length > 0) {
-                oFilter.aFilters.forEach(f => {
-                    aResult = aResult.concat(this._flattenFilters(f));
-                });
-            } else if (oFilter.sPath) {
-                aResult.push({
-                    path: oFilter.sPath,
-                    operator: oFilter.sOperator,
-                    value1: oFilter.oValue1,
-                    value2: oFilter.oValue2
-                });
-            }
-            return aResult;
         }
 
     };

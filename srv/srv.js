@@ -6,15 +6,62 @@ class MyOrderApprovalService extends cds.ApplicationService {
         // -------------------------------
         //  getBooleanVH action
         // -------------------------------      
-        const { BooleanVH } = this.entities;
+        const { BooleanVH, Orders } = this.entities;
+
+                // -------------------------------
+        //  getApprovalStats function
+        // -------------------------------
+        this.on('getApprovalStats', async (req) => {
+            console.log("📊 getApprovalStats invoked");
+
+            try {
+                // Get total count
+                const totalResult = await SELECT.from(Orders).columns('count(*) as count');
+                const totalOrders = totalResult[0].count || 0;
+
+                // Get approved count (approveLoad = true)
+                const approvedResult = await SELECT.from(Orders)
+                    .where({ approveLoad: true })
+                    .columns('count(*) as count');
+                const approvedOrders = approvedResult[0].count || 0;
+
+                // Get rejected count (approveLoad = false)
+                const rejectedResult = await SELECT.from(Orders)
+                    .where({ approveLoad: false })
+                    .columns('count(*) as count');
+                const rejectedOrders = rejectedResult[0].count || 0;
+
+                // Get pending count (approveLoad = null)
+                const pendingResult = await SELECT.from(Orders)
+                    .where({ approveLoad: null })
+                    .columns('count(*) as count');
+                const pendingOrders = pendingResult[0].count || 0;
+
+                console.log(`📊 Stats: Total=${totalOrders}, Approved=${approvedOrders}, Rejected=${rejectedOrders}, Pending=${pendingOrders}`);
+
+                return {
+                    totalOrders,
+                    approvedOrders,
+                    rejectedOrders,
+                    pendingOrders
+                };
+
+            } catch (err) {
+                console.error("❌ Error fetching approval stats:", err);
+                req.error(500, "Failed to fetch approval statistics: " + err.message);
+            }
+        });
+
+
+
         this.on('READ', 'BooleanVH', async (req) => {
-                    console.log("📖 BooleanVH READ triggered!");
-                  const data = [
-                        { code: true,  label: "Yes" },
-                        { code: false, label: "No" }
-                    ];
-                    return data;
-                });
+            console.log("📖 BooleanVH READ triggered!");
+            const data = [
+                { code: true,  label: "true" },
+                { code: false, label: "false" }
+            ];
+            return data;
+        });
 
         // -------------------------------
         //  approveOrders action
@@ -28,10 +75,15 @@ class MyOrderApprovalService extends cds.ApplicationService {
             console.log("filters (raw):", filters);
             console.log("allSelected:", allSelected);
 
+            // ✅ Complete field list including new fields
             const validFields = [
                 'orderNumber', 'itemNumber', 'product', 'sourceLocation', 'destinationLocation',
                 'mot', 'quantity', 'uom', 'category', 'categoryDescription', 'startDate', 'endDate',
-                'destDaySupp', 'destStockOH', 'mot2', 'abcClass', 'week', 'approveLoad', 'reasonCode'
+                'destDaySupp', 'destStockOH', 'mot2', 'abcClass', 'week', 'approveLoad', 'reasonCode',
+                // New fields
+                'fastestMOT', 'slowestMOT', 'productCategory', 'estimatedRisk', 'profitAtRisk',
+                'costDelta', 'impactAmount', 'fastestMOTCost', 'slowestMOTCost', 
+                'fastestMOTDurationDays', 'slowestMOTDurationDays', 'aiReason', 'aiOutput'
             ];
 
             let whereConditions = {};
@@ -43,7 +95,10 @@ class MyOrderApprovalService extends cds.ApplicationService {
                 let aFilters = [];
                 try {
                     aFilters = JSON.parse(filters);
-                } catch (e) { console.log("❌ Filter parse error:", e); }
+                } catch (e) { 
+                    console.log("❌ Filter parse error:", e);
+                    return req.error(400, "Invalid filter format");
+                }
 
                 const validFilters = aFilters.filter(f => f.path && validFields.includes(f.path));
 
@@ -82,6 +137,19 @@ class MyOrderApprovalService extends cds.ApplicationService {
                             whereConditions[field] = { "<=": f.value1 };
                             break;
 
+                        case "Contains":
+                        case "CP":
+                            whereConditions[field] = { like: `%${f.value1}%` };
+                            break;
+
+                        case "StartsWith":
+                            whereConditions[field] = { like: `${f.value1}%` };
+                            break;
+
+                        case "EndsWith":
+                            whereConditions[field] = { like: `%${f.value1}` };
+                            break;
+
                         default:
                             console.warn("⚠ Unsupported operator:", f.operator);
                     }
@@ -95,6 +163,8 @@ class MyOrderApprovalService extends cds.ApplicationService {
                 });
             }
 
+            console.log("🔍 Where conditions:", JSON.stringify(whereConditions, null, 2));
+
             // -------------------------------
             //  DETERMINE WHICH ORDERS TO UPDATE
             // -------------------------------
@@ -103,14 +173,21 @@ class MyOrderApprovalService extends cds.ApplicationService {
             if (allSelected) {
                 console.log("🔍 allSelected = TRUE — loading by filters");
 
-                const rows = await SELECT.from('strbw.Orders')
-                    .where(whereConditions)
-                    .columns(['orderNumber', 'itemNumber']);
+                try {
+                    const rows = await SELECT.from(Orders)
+                        .where(whereConditions)
+                        .columns(['orderNumber', 'itemNumber']);
 
-                ordersToUpdate = rows.map(r => ({
-                    orderNumber: r.orderNumber,
-                    itemNumber: r.itemNumber
-                }));
+                    ordersToUpdate = rows.map(r => ({
+                        orderNumber: r.orderNumber,
+                        itemNumber: r.itemNumber
+                    }));
+
+                    console.log(`📊 Found ${ordersToUpdate.length} orders matching filters`);
+                } catch (err) {
+                    console.error("❌ Error fetching orders:", err);
+                    return req.error(500, "Failed to fetch orders: " + err.message);
+                }
             }
             else {
                 console.log("🔍 Updating only selected orders");
@@ -120,24 +197,31 @@ class MyOrderApprovalService extends cds.ApplicationService {
                 }
 
                 if (Object.keys(whereConditions).length > 0) {
-                    const rows = await SELECT.from('strbw.Orders')
-                        .where(whereConditions)
-                        .columns(['orderNumber', 'itemNumber']);
+                    try {
+                        const rows = await SELECT.from(Orders)
+                            .where(whereConditions)
+                            .columns(['orderNumber', 'itemNumber']);
 
-                    ordersToUpdate = orders.filter(o =>
-                        rows.some(r =>
-                            r.orderNumber === o.orderNumber &&
-                            r.itemNumber === o.itemNumber
-                        )
-                    );
+                        ordersToUpdate = orders.filter(o =>
+                            rows.some(r =>
+                                r.orderNumber === o.orderNumber &&
+                                r.itemNumber === o.itemNumber
+                            )
+                        );
+                    } catch (err) {
+                        console.error("❌ Error validating selected orders:", err);
+                        return req.error(500, "Failed to validate orders: " + err.message);
+                    }
                 } else {
                     ordersToUpdate = orders;
                 }
             }
 
             if (ordersToUpdate.length === 0) {
-                return req.error(400, "No orders to update.");
+                return req.error(400, "No orders to update after applying filters.");
             }
+
+            console.log(`✅ Will update ${ordersToUpdate.length} orders`);
 
             // -------------------------------
             //  OPTIMIZED UPDATE WITH NATIVE SQL
@@ -166,13 +250,16 @@ class MyOrderApprovalService extends cds.ApplicationService {
                     }
                 };
 
+                const startTime = Date.now();
+
                 // Decide strategy based on volume
                 if (ordersToUpdate.length <= 5000) {
                     // Single query for small to medium datasets
                     const query = buildUpdateQuery(ordersToUpdate);
                     await db.run(query.sql, query.params);
 
-                    console.log(`✅ Updated ${ordersToUpdate.length} orders in 1 query`);
+                    const duration = Date.now() - startTime;
+                    console.log(`✅ Updated ${ordersToUpdate.length} orders in 1 query (${duration}ms)`);
                 } else {
                     // Parallel batch execution for large datasets
                     const BATCH_SIZE = 1000;
@@ -189,12 +276,14 @@ class MyOrderApprovalService extends cds.ApplicationService {
                         })
                     );
 
-                    console.log(`✅ Updated ${ordersToUpdate.length} orders in ${batches.length} parallel queries`);
+                    const duration = Date.now() - startTime;
+                    console.log(`✅ Updated ${ordersToUpdate.length} orders in ${batches.length} parallel queries (${duration}ms)`);
                 }
 
                 return {
                     success: true,
-                    message: `${ordersToUpdate.length} orders updated successfully.`
+                    message: `Successfully updated ${ordersToUpdate.length} order${ordersToUpdate.length > 1 ? 's' : ''}.`,
+                    count: ordersToUpdate.length
                 };
 
             } catch (err) {
@@ -203,6 +292,7 @@ class MyOrderApprovalService extends cds.ApplicationService {
             }
 
         });
+
         await super.init();
     }
 }
