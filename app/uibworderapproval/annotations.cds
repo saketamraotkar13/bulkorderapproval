@@ -416,8 +416,7 @@ annotate service.Orders with {
             Label : 'MOT2',
         },
         Common.ValueListWithFixedValues : true,
-        Common.FieldControl : #ReadOnly,
-    )
+        )
 };
 
 annotate service.Orders with {

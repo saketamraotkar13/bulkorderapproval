@@ -1,8 +1,8 @@
 using {strbw as mydb} from '../db/data-model';
 
 service MyOrderApprovalService {
-
-    @odata.draft.enabled: false
+    @odata.draft.bypass
+    @odata.draft.enabled:true
     entity Orders as projection on mydb.Orders;
 
     entity reasonCodeVH as projection on mydb.reasonCodeVH;
