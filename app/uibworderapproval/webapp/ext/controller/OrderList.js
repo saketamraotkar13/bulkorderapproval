@@ -9,10 +9,10 @@ sap.ui.define([
 
         onShowKPIs: function (oEvent, oEvt) {
             MessageToast.show("Loading KPI Dashboard...");
-            
+
             var oModel = this.getModel();
             var that = this;
-            
+
             // Show busy indicator
             sap.ui.core.BusyIndicator.show(0);
 
@@ -24,9 +24,9 @@ sap.ui.define([
                     // Get the data
                     var oKPIData = oFunctionContext.getBoundContext().getObject();
                     console.log("📊 KPI Data received:", oKPIData);
-                    
+
                     sap.ui.core.BusyIndicator.hide();
-                    
+
                     // Open dialog with data
                     if (!that._kpiDialog) {
                         Fragment.load({
@@ -35,7 +35,7 @@ sap.ui.define([
                             controller: that
                         }).then(function (oDialog) {
                             that._kpiDialog = oDialog;
-                            
+
                             // ✅ Create and set KPI model with chart data
                             var oKPIModel = new sap.ui.model.json.JSONModel({
                                 totalOrders: oKPIData.totalOrders || 0,
@@ -46,6 +46,7 @@ sap.ui.define([
                                 rejectionRate: oKPIData.rejectionRate || 0,
                                 pendingRate: oKPIData.pendingRate || 0,
                                 sumOfQuantity: oKPIData.sumOfQuantity || 0,
+                                sumOfProfitAtRisk: oKPIData.sumOfProfitAtRisk || 0,
                                 lastUpdated: new Date().toLocaleString(),
                                 // ✅ Chart data format
                                 chartData: [
@@ -63,10 +64,10 @@ sap.ui.define([
                                     }
                                 ]
                             });
-                            
+
                             that._kpiDialog.setModel(oKPIModel, "kpi");
                             that._kpiDialog.open();
-                            
+
                             console.log("✅ Dialog opened with KPI data");
                         }).catch(function (error) {
                             console.error("❌ Error loading fragment:", error);
@@ -84,6 +85,7 @@ sap.ui.define([
                             rejectionRate: oKPIData.rejectionRate || 0,
                             pendingRate: oKPIData.pendingRate || 0,
                             sumOfQuantity: oKPIData.sumOfQuantity || 0,
+                            sumOfProfitAtRisk: oKPIData.sumOfProfitAtRisk || 0,
                             lastUpdated: new Date().toLocaleString(),
                             chartData: [
                                 {
@@ -254,6 +256,8 @@ sap.ui.define([
                             }
 
                             const chunkedOrders = chunkArray(aOrders, 200);
+                            let lastResponse = null;
+                            sap.ui.core.BusyIndicator.show(0);
 
                             for (const ordersChunk of chunkedOrders) {
                                 var oAction = oModel.bindContext("/approveOrders(...)");
@@ -265,10 +269,25 @@ sap.ui.define([
                                 oAction.setParameter("allSelected", bSelectAll);
 
                                 await oAction.execute();
+                                lastResponse = oAction.getBoundContext().getObject();
+                                console.log(lastResponse);
                             }
-
-                            sap.m.MessageToast.show("Orders processed successfully.");
-                            oModel.refresh();
+                            sap.ui.core.BusyIndicator.hide();
+                            
+                            if (lastResponse && lastResponse.message) 
+                                {
+                                    sap.m.MessageToast.show(lastResponse.message);
+                                    oModel.refresh();
+                                // sap.m.MessageBox.success(lastResponse.message, {
+                                //     title: "Success",
+                                //     onClose: function () {
+                                //         oModel.refresh();
+                                //     }
+                                // });
+                            } else {
+                                sap.m.MessageToast.show("Orders processed successfully.");
+                                oModel.refresh();
+                            }
                         } catch (oError) {
                             console.error("Bulk approval failed:", oError);
                             sap.m.MessageBox.error("Bulk approval failed: " + (oError.message || "Unknown error"));

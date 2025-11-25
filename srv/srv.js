@@ -5,39 +5,43 @@ class MyOrderApprovalService extends cds.ApplicationService {
     async init() {        
         const { BooleanVH, Orders } = this.entities;
 
-        
         // -------------------------------
         //  Validation: Approval & Reason Code Logic
         // -------------------------------
-        // this.before(['CREATE', 'UPDATE'], 'Orders', async (req) => {
-        //     const { approveLoad, reasonCode } = req.data;
+        this.before(['UPDATE'], 'Orders', async (req) => {
+            const { approveLoad, reasonCode, mot2 } = req.data;
             
-        //     console.log(`📝 Validation triggered: approveLoad=${approveLoad}, reasonCode=${reasonCode}`);
+            console.log(`Validation triggered: approveLoad=${approveLoad}, reasonCode=${reasonCode}`);
+
+            if (mot2 && approveLoad === null)
+            {
+                return req.error(400, 'Please Approve the Order in order to update User Suggested MOT');
+            }
             
-        //     // Rule 1: If approving (true), reasonCode must be cleared
-        //     if (approveLoad === true && reasonCode) {
-        //         req.data.reasonCode = null; // Clear it automatically
-        //         console.log("✅ Order approved: reasonCode cleared");
-        //     }
+            // Rule 1: If approving (true), reasonCode must be cleared
+            if (approveLoad === true && reasonCode) {
+                req.data.reasonCode = null; // Clear it automatically
+                console.log("✅ Order approved: reasonCode cleared");
+            }
             
-        //     // Rule 2: If rejecting (false), reasonCode is mandatory
-        //     if (approveLoad === false && (!reasonCode || reasonCode.trim() === '')) {
-        //         return req.error(400, 'Reason Code is required when rejecting an order (approveLoad = false).');
-        //     }
+            // Rule 2: If rejecting (false), reasonCode is mandatory
+            if (approveLoad === false && (!reasonCode || reasonCode.trim() === '')) {
+                return req.error(400, 'Reason Code is required when rejecting an order (approveLoad = false).');
+            }
             
-        //     // Rule 3: If pending (null/undefined), reasonCode should be empty
-        //     if (approveLoad === null || approveLoad === undefined) {
-        //         req.data.reasonCode = null;
-        //         console.log("⏳ Order pending: reasonCode cleared");
-        //     }
-        // });
+            // Rule 3: If pending (null/undefined), reasonCode should be empty
+            if (approveLoad === null || approveLoad === undefined) {
+                req.data.reasonCode = null;
+                console.log("⏳ Order pending: reasonCode cleared");
+            }
+        });
 
 
         // -------------------------------
         //  getApprovalStats function
         // -------------------------------
         this.on('getApprovalStats', async (req) => {
-            console.log("📊 getApprovalStats invoked");
+            console.log("getApprovalStats invoked");
 
             try {
                 const result = await SELECT.one.from(Orders).columns(
@@ -45,7 +49,8 @@ class MyOrderApprovalService extends cds.ApplicationService {
                     `sum(case when approveLoad = true  then 1 else 0 end) as approvedOrders`,
                     `sum(case when approveLoad = false then 1 else 0 end) as rejectedOrders`,
                     `sum(case when approveLoad is null then 1 else 0 end) as pendingOrders`,
-                    'sum(quantity) as sumOfQuantity'
+                    'sum(quantity) as sumOfQuantity',
+                    'sum(profitAtRisk) as sumOfProfitAtRisk' 
                 );
 
                 // Calculate percentages
@@ -66,7 +71,8 @@ class MyOrderApprovalService extends cds.ApplicationService {
                     approvalRate: parseFloat(approvalRate),
                     rejectionRate: parseFloat(rejectionRate),
                     pendingRate: parseFloat(pendingRate),
-                    sumOfQuantity: parseFloat(Number(result.sumOfQuantity || 0).toFixed(3))
+                    sumOfQuantity: parseFloat(Number(result.sumOfQuantity || 0).toFixed(3)),
+                    sumOfProfitAtRisk: parseFloat(Number(result.sumOfProfitAtRisk || 0).toFixed(3))
                 };
 
             } catch (err) {
@@ -76,7 +82,7 @@ class MyOrderApprovalService extends cds.ApplicationService {
         });
 
         // -------------------------------
-        //  Boolean Values
+        //  Boolean Values f4 help
         // -------------------------------
         this.on('READ', 'BooleanVH', async (req) => {
             console.log("📖 BooleanVH READ triggered!");
@@ -261,17 +267,17 @@ class MyOrderApprovalService extends cds.ApplicationService {
 
                     const params = batch.flatMap(order => [order.orderNumber, order.itemNumber]);
 
-                    if (reasonCode) {
+                    // if (reasonCode) {
                         return {
                             sql: `UPDATE strbw_Orders SET approveLoad = ?, reasonCode = ? WHERE ${conditions}`,
                             params: [approveLoad, reasonCode, ...params]
                         };
-                    } else {
-                        return {
-                            sql: `UPDATE strbw_Orders SET approveLoad = ? WHERE ${conditions}`,
-                            params: [approveLoad, ...params]
-                        };
-                    }
+                    // } else {
+                    //     return {
+                    //         sql: `UPDATE strbw_Orders SET approveLoad = ? WHERE ${conditions}`,
+                    //         params: [approveLoad, ...params]
+                    //     };
+                    // }
                 };
 
                 const startTime = Date.now();

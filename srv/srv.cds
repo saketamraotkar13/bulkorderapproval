@@ -26,6 +26,7 @@ service MyOrderApprovalService {
         rejectionRate     : Decimal(5, 2);
         pendingRate       : Decimal(5, 2);
         sumOfQuantity     : Decimal(20, 3);
+        sumOfProfitAtRisk : Decimal(20, 3);  // ✅ NEW
     };
 
 
