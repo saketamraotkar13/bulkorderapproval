@@ -79,14 +79,18 @@ annotate service.Orders with @(
         {
             $Type : 'UI.DataField',
             Value : uom,
-        },
+        },           
         {
             $Type : 'UI.DataField',
             Value : mot,
         },
         {
             $Type : 'UI.DataField',
-            Value : mot2,
+            Value : aimot2,            
+        },             
+        {
+            $Type : 'UI.DataField',
+            Value : mot2,            
         },
         {
             $Type : 'UI.DataField',
@@ -318,6 +322,11 @@ annotate service.Orders with @(
                 Value: aiOutput,
                 Label: 'AI Output',
             },
+            {
+                $Type: 'UI.DataField',
+                Value: aimot2,
+                Label: 'AI MOT2',
+            },            
         ],
     },
     
@@ -335,6 +344,7 @@ annotate service.Orders with @(
             {
                 $Type: 'UI.DataField',
                 Value: mot2,
+                Label: 'Suggested MOT',
             }
         ],
     },
@@ -392,6 +402,25 @@ annotate service.Orders with {
                     $Type : 'Common.ValueListParameterInOut',
                     LocalDataProperty : mot,
                     ValueListProperty : 'mot',
+                },
+            ],
+            Label : 'Mode of Transport',
+        },
+        Common.ValueListWithFixedValues : true,
+        Common.FieldControl : #ReadOnly,
+    )
+};
+
+annotate service.Orders with {
+    aimot2 @(
+        Common.ValueList : {
+            $Type : 'Common.ValueListType',
+            CollectionPath : 'aimot2VH',
+            Parameters : [
+                {
+                    $Type : 'Common.ValueListParameterInOut',
+                    LocalDataProperty : aimot2,
+                    ValueListProperty : 'aimot2',
                 },
             ],
             Label : 'Mode of Transport',
@@ -638,6 +667,7 @@ annotate service.Orders with {
     aiReason                  @Common.FieldControl : #ReadOnly;
     aiOutput                  @Common.FieldControl : #ReadOnly;
     profitAtRisk              @Common.FieldControl : #ReadOnly;
+    aimot2                    @Common.FieldControl : #ReadOnly;
 };
 
 // ========================================

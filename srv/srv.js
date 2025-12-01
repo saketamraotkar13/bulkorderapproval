@@ -9,7 +9,7 @@ class MyOrderApprovalService extends cds.ApplicationService {
         const validFields = [
             'orderNumber', 'itemNumber', 'product', 'sourceLocation', 'destinationLocation',
             'mot', 'quantity', 'uom', 'category', 'categoryDescription', 'startDate', 'endDate',
-            'destDaySupp', 'destStockOH', 'mot2', 'abcClass', 'week', 'approveLoad', 'reasonCode',
+            'destDaySupp', 'destStockOH', 'mot2', 'aimot2', 'abcClass', 'week', 'approveLoad', 'reasonCode',
             // New fields
             'fastestMOT', 'slowestMOT', 'productCategory', 'estimatedRisk', 'profitAtRisk',
             'costDelta', 'impactAmount', 'fastestMOTCost', 'slowestMOTCost', 

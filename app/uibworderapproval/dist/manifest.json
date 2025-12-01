@@ -22,7 +22,7 @@
 		},
 		"dataSources": {
 			"mainService": {
-				"uri": "odata/v4/my-order-approval/",
+				"uri": "/odata/v4/my-order-approval/",
 				"type": "OData",
 				"settings": {
 					"annotations": [],
@@ -173,8 +173,8 @@
 					"name": "sap.fe.templates.ObjectPage",
 					"options": {
 						"settings": {
-							"editableHeaderContent": false,
-							"contextPath": "/Orders"
+							"contextPath": "/Orders",
+							"editMode": "Editable"
 						}
 					}
 				}

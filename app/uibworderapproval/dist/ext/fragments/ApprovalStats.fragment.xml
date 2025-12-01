@@ -6,38 +6,23 @@
 	xmlns:viz="sap.viz.ui5.controls"
 	xmlns:viz.feeds="sap.viz.ui5.controls.common.feeds"
 	xmlns:viz.data="sap.viz.ui5.data">
-
 	<Dialog
 		id="ShowTablePop"
-		title="📊 Order Approval Dashboard"
-		contentWidth="90%"
-		contentHeight="700px"
+		title="📊 Order Approval KPIs"
+		contentWidth="100%"
+		contentHeight="100%"
 		draggable="true"
 		resizable="true"
 		core:require="{handler: 'uibworderapproval/ext/controller/OrderList'}">
-
 		<content>
 			<layout:VerticalLayout class="sapUiContentPadding" width="100%">
-				
-				<!-- Header -->
-				<Label 
-					text="Order Approval Statistics" 
-					design="Bold" 
-					class="sapUiSmallMarginBottom"/>
-				
-				<!-- Timestamp -->
-				<Toolbar class="sapUiTinyMarginTop">
-					<ToolbarSpacer/>
-					<Text text="Last updated: {kpi>/lastUpdated}"/>
-				</Toolbar>
-
 				<!-- Large Donut Chart with Count -->
-				<layout:VerticalLayout width="100%" class="sapUiSmallMarginTop">
+				<layout:VerticalLayout width="50%" class="sapUiSmallMarginTop">
 					<Title text="Order Status Distribution" level="H4" class="sapUiSmallMarginBottom"/>
 					<viz:VizFrame
 						id="donutChart"
 						uiConfig="{applicationSet:'fiori'}"
-						height="450px"
+						height="230px"
 						width="100%"
 						vizType="donut"
 						vizProperties="{
@@ -50,7 +35,7 @@
 									type: 'value',
 									formatString: '#,##0'
 								},
-								innerRadius: 0.6
+								innerRadius: 0.8
 							},
 							legend: {
 								visible: true,
@@ -72,10 +57,10 @@
 							<viz.feeds:FeedItem uid="color" type="Dimension" values="Status"/>
 						</viz:feeds>
 					</viz:VizFrame>
+					<!-- <Label text="KPI Details:"></Label> -->
 				</layout:VerticalLayout>
-				
 				<!-- Statistics Table -->
-				<Table class="sapUiSmallMarginTop">
+				<Table class="sapUiSmallMarginTop" width="100%"> 
 					<columns>
 						<Column width="50%">
 							<header>
@@ -122,12 +107,29 @@
 								<Text text="{kpi>/pendingRate}%"/>
 							</cells>
 						</ColumnListItem>
+						<ColumnListItem vAlign="Middle">
+							<cells>
+								<ObjectIdentifier title="Other Metcics"/>
+							</cells>
+						</ColumnListItem>
+						<!-- ✅ NEW: Total Quantity Row -->
+						<ColumnListItem>
+							<cells>
+								<Text text="Total Quantity"/>
+								<Text text="{kpi>/sumOfQuantity}"/>
+							</cells>
+						</ColumnListItem>
+						<!-- ✅ NEW: Total Profit At Risk Row -->
+						<ColumnListItem>
+							<cells>
+								<Text text="Total Profit At Risk"/>
+								<Text text="{kpi>/sumOfProfitAtRisk}"/>
+							</cells>
+						</ColumnListItem>
 					</items>
 				</Table>
-				
 			</layout:VerticalLayout>
 		</content>
-
 		<endButton>
 			<Button text="Close" press="handler.onCloseTableDialog"/>
 		</endButton>

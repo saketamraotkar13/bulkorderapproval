@@ -45,6 +45,13 @@ service MyOrderApprovalService {
         group by
             MOT2;
 
+    // NEW: AI MOT2 Value Help
+    entity aimot2VH              as
+        projection on mydb.Orders {
+            key aimot2: String
+        }
+        group by
+            aimot2;
     entity MOTVH                 as
         projection on mydb.Orders {
             key mot : String

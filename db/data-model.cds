@@ -29,8 +29,10 @@ entity Orders {
     destDaySupp               : Decimal(18,3);
     @title: 'Destination Stock On Hand'
     destStockOH               : Decimal(18,3);
-    @title: 'MOT2'
+    @title: 'Suggested MOT'
     mot2                      : String;
+    @title: 'AI MOT'
+    aimot2                    : String;    
     @title: 'ABC Class'
     abcClass                  : String;
     @title: 'Week'
