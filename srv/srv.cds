@@ -17,7 +17,7 @@ service MyOrderApprovalService {
                            allSelected: Boolean) returns String;
 
     // Function to get approval statistics
-    function getApprovalStats()                  returns {
+    function getApprovalStats(filters : String)                  returns {
         totalOrders       : Integer;
         approvedOrders    : Integer;
         rejectedOrders    : Integer;

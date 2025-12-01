@@ -7,17 +7,48 @@ sap.ui.define([
 
     return {
 
+        // ========================================
+        // SHOW KPIs - NOW WITH FILTERS SUPPORT
+        // ========================================
         onShowKPIs: function (oEvent, oEvt) {
             MessageToast.show("Loading KPI Dashboard...");
 
             var oModel = this.getModel();
             var that = this;
 
+            // 🔹 Get current filters from FilterBar (same logic as onBulkApproval)
+            const flattenFilters = function (oFilter) {
+                let aResult = [];
+                if (!oFilter) return aResult;
+                if (oFilter.aFilters && oFilter.aFilters.length > 0) {
+                    oFilter.aFilters.forEach(f => {
+                        aResult = aResult.concat(flattenFilters(f));
+                    });
+                } else if (oFilter.sPath) {
+                    aResult.push({
+                        path: oFilter.sPath,
+                        operator: oFilter.sOperator,
+                        value1: oFilter.oValue1,
+                        value2: oFilter.oValue2
+                    });
+                }
+                return aResult;
+            };
+
+            const oFEFilters = this.getFilters();
+            let aFilters = [];
+            if (oFEFilters.filters && oFEFilters.filters.length > 0) {
+                aFilters = flattenFilters(oFEFilters.filters[0]);
+            }
+
+            console.log("📊 Filters for KPI:", JSON.stringify(aFilters));
+
             // Show busy indicator
             sap.ui.core.BusyIndicator.show(0);
 
-            // Call CAP function to get KPI data
+            // Call CAP function to get KPI data WITH FILTERS
             var oFunctionContext = oModel.bindContext("/getApprovalStats(...)");
+            oFunctionContext.setParameter("filters", JSON.stringify(aFilters));
 
             oFunctionContext.execute()
                 .then(function () {
@@ -120,8 +151,9 @@ sap.ui.define([
             }
         },
 
-        //---------------Bulk Order Approval-------------------------//        
-
+        // ========================================
+        // BULK ORDER APPROVAL - UNCHANGED
+        // ========================================
         onBulkApproval: async function (oContext, aSelectedContexts) {
             if (!aSelectedContexts || aSelectedContexts.length === 0) {
                 sap.m.MessageBox.warning("Please select at least one order.");
@@ -278,12 +310,6 @@ sap.ui.define([
                                 {
                                     sap.m.MessageToast.show(lastResponse.message);
                                     oModel.refresh();
-                                // sap.m.MessageBox.success(lastResponse.message, {
-                                //     title: "Success",
-                                //     onClose: function () {
-                                //         oModel.refresh();
-                                //     }
-                                // });
                             } else {
                                 sap.m.MessageToast.show("Orders processed successfully.");
                                 oModel.refresh();

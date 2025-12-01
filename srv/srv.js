@@ -5,46 +5,143 @@ class MyOrderApprovalService extends cds.ApplicationService {
     async init() {        
         const { BooleanVH, Orders } = this.entities;
 
+        // ✅ Complete field list including new fields
+        const validFields = [
+            'orderNumber', 'itemNumber', 'product', 'sourceLocation', 'destinationLocation',
+            'mot', 'quantity', 'uom', 'category', 'categoryDescription', 'startDate', 'endDate',
+            'destDaySupp', 'destStockOH', 'mot2', 'abcClass', 'week', 'approveLoad', 'reasonCode',
+            // New fields
+            'fastestMOT', 'slowestMOT', 'productCategory', 'estimatedRisk', 'profitAtRisk',
+            'costDelta', 'impactAmount', 'fastestMOTCost', 'slowestMOTCost', 
+            'fastestMOTDurationDays', 'slowestMOTDurationDays', 'aiReason', 'aiOutput'
+        ];
+
+        // -------------------------------
+        //  Helper: Parse Filters to WHERE conditions
+        // -------------------------------
+        function parseFiltersToWhere(filters) {
+            let whereConditions = {};
+
+            if (!filters || filters === '{}' || filters === '') {
+                return whereConditions;
+            }
+
+            let aFilters = [];
+            try {
+                aFilters = JSON.parse(filters);
+            } catch (e) { 
+                console.log("❌ Filter parse error:", e);
+                return whereConditions;
+            }
+
+            const validFilters = aFilters.filter(f => f.path && validFields.includes(f.path));
+
+            validFilters.forEach(f => {
+                const field = f.path;
+
+                switch (f.operator) {
+                    case "EQ":
+                        if (!whereConditions[field]) {
+                            whereConditions[field] = [];
+                        }
+                        whereConditions[field].push(f.value1);
+                        break;
+
+                    case "BT":
+                        whereConditions[field] = { ">=": f.value1, "<=": f.value2 };
+                        break;
+
+                    case "NE":
+                        whereConditions[field] = { "<>": f.value1 };
+                        break;
+
+                    case "GT":
+                        whereConditions[field] = { ">": f.value1 };
+                        break;
+
+                    case "LT":
+                        whereConditions[field] = { "<": f.value1 };
+                        break;
+
+                    case "GE":
+                        whereConditions[field] = { ">=": f.value1 };
+                        break;
+
+                    case "LE":
+                        whereConditions[field] = { "<=": f.value1 };
+                        break;
+
+                    case "Contains":
+                    case "CP":
+                        whereConditions[field] = { like: `%${f.value1}%` };
+                        break;
+
+                    case "StartsWith":
+                        whereConditions[field] = { like: `${f.value1}%` };
+                        break;
+
+                    case "EndsWith":
+                        whereConditions[field] = { like: `%${f.value1}` };
+                        break;
+
+                    default:
+                        console.warn("⚠ Unsupported operator:", f.operator);
+                }
+            });
+
+            // Convert EQ arrays → IN conditions
+            Object.keys(whereConditions).forEach(k => {
+                if (Array.isArray(whereConditions[k])) {
+                    whereConditions[k] = { in: whereConditions[k] };
+                }
+            });
+
+            return whereConditions;
+        }
+
         // -------------------------------
         //  Validation: Approval & Reason Code Logic
         // -------------------------------
         this.before(['UPDATE'], 'Orders', async (req) => {
-            const { approveLoad, reasonCode, mot2 } = req.data;
+           const { approveLoad, reasonCode, mot2 } = req.data;
             
-            console.log(`Validation triggered: approveLoad=${approveLoad}, reasonCode=${reasonCode}`);
+            console.log(`Validation triggered: approveLoad=${approveLoad}, reasonCode=${reasonCode}, mot2=${mot2}`);
 
-            if (mot2 && approveLoad === null)
-            {
-                return req.error(400, 'Please Approve the Order in order to update User Suggested MOT');
+            // Rule 1: If mot2 is being set and approveLoad is null
+            // MOT change is allowed only for approved Load
+            if (mot2 && approveLoad === null) {
+                return req.error(400, 'MOT change is allowed only for approved Load');
             }
-            
-            // Rule 1: If approving (true), reasonCode must be cleared
-            if (approveLoad === true && reasonCode) {
-                req.data.reasonCode = null; // Clear it automatically
-                console.log("✅ Order approved: reasonCode cleared");
-            }
-            
+
             // Rule 2: If rejecting (false), reasonCode is mandatory
             if (approveLoad === false && (!reasonCode || reasonCode.trim() === '')) {
-                return req.error(400, 'Reason Code is required when rejecting an order (approveLoad = false).');
+                return req.error(400, 'Reason Code is mandatory when rejecting an order');
             }
-            
-            // Rule 3: If pending (null/undefined), reasonCode should be empty
-            if (approveLoad === null || approveLoad === undefined) {
+
+            // Rule 3: If approving (true), reasonCode must be cleared
+            if (approveLoad === true) {
                 req.data.reasonCode = null;
-                console.log("⏳ Order pending: reasonCode cleared");
+                console.log("✅ Order approved: reasonCode cleared");
             }
         });
 
 
         // -------------------------------
-        //  getApprovalStats function
+        //  getApprovalStats function (WITH FILTERS)
         // -------------------------------
         this.on('getApprovalStats', async (req) => {
-            console.log("getApprovalStats invoked");
+            const { filters } = req.data;
+
+            console.log("✅ getApprovalStats invoked");
+            console.log("filters (raw):", filters);
 
             try {
-                const result = await SELECT.one.from(Orders).columns(
+                // Parse filters to WHERE conditions
+                const whereConditions = parseFiltersToWhere(filters);
+                console.log("🔍 Where conditions:", JSON.stringify(whereConditions, null, 2));
+
+                // Build query with or without filters
+                let query = SELECT.one.from(Orders).columns(
                     'count(*) as totalOrders',
                     `sum(case when approveLoad = true  then 1 else 0 end) as approvedOrders`,
                     `sum(case when approveLoad = false then 1 else 0 end) as rejectedOrders`,
@@ -52,6 +149,13 @@ class MyOrderApprovalService extends cds.ApplicationService {
                     'sum(quantity) as sumOfQuantity',
                     'sum(profitAtRisk) as sumOfProfitAtRisk' 
                 );
+
+                // Apply filters if any
+                if (Object.keys(whereConditions).length > 0) {
+                    query = query.where(whereConditions);
+                }
+
+                const result = await query;
 
                 // Calculate percentages
                 const total = result.totalOrders || 0;
@@ -63,7 +167,7 @@ class MyOrderApprovalService extends cds.ApplicationService {
                 const rejectionRate = total > 0 ? ((rejected / total) * 100).toFixed(2) : 0;
                 const pendingRate = total > 0 ? ((pending / total) * 100).toFixed(2) : 0;
 
-                return {
+                const stats = {
                     totalOrders: total,
                     approvedOrders: approved,
                     rejectedOrders: rejected,
@@ -74,6 +178,9 @@ class MyOrderApprovalService extends cds.ApplicationService {
                     sumOfQuantity: parseFloat(Number(result.sumOfQuantity || 0).toFixed(3)),
                     sumOfProfitAtRisk: parseFloat(Number(result.sumOfProfitAtRisk || 0).toFixed(3))
                 };
+
+                console.log("✅ Stats calculated:", stats);
+                return stats;
 
             } catch (err) {
                 console.error("❌ Error fetching approval stats:", err);
@@ -105,93 +212,8 @@ class MyOrderApprovalService extends cds.ApplicationService {
             console.log("filters (raw):", filters);
             console.log("allSelected:", allSelected);
 
-            // ✅ Complete field list including new fields
-            const validFields = [
-                'orderNumber', 'itemNumber', 'product', 'sourceLocation', 'destinationLocation',
-                'mot', 'quantity', 'uom', 'category', 'categoryDescription', 'startDate', 'endDate',
-                'destDaySupp', 'destStockOH', 'mot2', 'abcClass', 'week', 'approveLoad', 'reasonCode',
-                // New fields
-                'fastestMOT', 'slowestMOT', 'productCategory', 'estimatedRisk', 'profitAtRisk',
-                'costDelta', 'impactAmount', 'fastestMOTCost', 'slowestMOTCost', 
-                'fastestMOTDurationDays', 'slowestMOTDurationDays', 'aiReason', 'aiOutput'
-            ];
-
-            let whereConditions = {};
-
-            // -------------------------------
-            //  PARSE FILTERS
-            // -------------------------------
-            if (filters) {
-                let aFilters = [];
-                try {
-                    aFilters = JSON.parse(filters);
-                } catch (e) { 
-                    console.log("❌ Filter parse error:", e);
-                    return req.error(400, "Invalid filter format");
-                }
-
-                const validFilters = aFilters.filter(f => f.path && validFields.includes(f.path));
-
-                validFilters.forEach(f => {
-                    const field = f.path;
-
-                    switch (f.operator) {
-                        case "EQ":
-                            if (!whereConditions[field]) {
-                                whereConditions[field] = [];
-                            }
-                            whereConditions[field].push(f.value1);
-                            break;
-
-                        case "BT":
-                            whereConditions[field] = { ">=": f.value1, "<=": f.value2 };
-                            break;
-
-                        case "NE":
-                            whereConditions[field] = { "<>": f.value1 };
-                            break;
-
-                        case "GT":
-                            whereConditions[field] = { ">": f.value1 };
-                            break;
-
-                        case "LT":
-                            whereConditions[field] = { "<": f.value1 };
-                            break;
-
-                        case "GE":
-                            whereConditions[field] = { ">=": f.value1 };
-                            break;
-
-                        case "LE":
-                            whereConditions[field] = { "<=": f.value1 };
-                            break;
-
-                        case "Contains":
-                        case "CP":
-                            whereConditions[field] = { like: `%${f.value1}%` };
-                            break;
-
-                        case "StartsWith":
-                            whereConditions[field] = { like: `${f.value1}%` };
-                            break;
-
-                        case "EndsWith":
-                            whereConditions[field] = { like: `%${f.value1}` };
-                            break;
-
-                        default:
-                            console.warn("⚠ Unsupported operator:", f.operator);
-                    }
-                });
-
-                // Convert EQ arrays → IN conditions
-                Object.keys(whereConditions).forEach(k => {
-                    if (Array.isArray(whereConditions[k])) {
-                        whereConditions[k] = { in: whereConditions[k] };
-                    }
-                });
-            }
+            // Parse filters using helper function
+            const whereConditions = parseFiltersToWhere(filters);
 
             console.log("🔍 Where conditions:", JSON.stringify(whereConditions, null, 2));
 
@@ -267,17 +289,10 @@ class MyOrderApprovalService extends cds.ApplicationService {
 
                     const params = batch.flatMap(order => [order.orderNumber, order.itemNumber]);
 
-                    // if (reasonCode) {
-                        return {
-                            sql: `UPDATE strbw_Orders SET approveLoad = ?, reasonCode = ? WHERE ${conditions}`,
-                            params: [approveLoad, reasonCode, ...params]
-                        };
-                    // } else {
-                    //     return {
-                    //         sql: `UPDATE strbw_Orders SET approveLoad = ? WHERE ${conditions}`,
-                    //         params: [approveLoad, ...params]
-                    //     };
-                    // }
+                    return {
+                        sql: `UPDATE strbw_Orders SET approveLoad = ?, reasonCode = ? WHERE ${conditions}`,
+                        params: [approveLoad, reasonCode, ...params]
+                    };
                 };
 
                 const startTime = Date.now();

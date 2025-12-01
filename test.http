@@ -1,0 +1,149 @@
+### Base URL
+@baseUrl = http://localhost:4004/odata/v4/my-order-approval
+
+### ============================================
+### Test 1: Get all Orders
+### ============================================
+GET {{baseUrl}}/Orders
+Content-Type: application/json
+
+### ============================================
+### Test 2: Get reason codes value help
+### ============================================
+GET {{baseUrl}}/reasonCodeVH
+Content-Type: application/json
+
+### ============================================
+### Test 3: Get Approval Stats - No Filters (all orders)
+### ============================================
+GET {{baseUrl}}/getApprovalStats(filters='[]')
+Content-Type: application/json
+
+### ============================================
+### Test 4: Get Approval Stats - Filter by single category (EQ)
+### ============================================
+GET {{baseUrl}}/getApprovalStats(filters='[{"path":"category","operator":"EQ","value1":"Aerospace"}]')
+Content-Type: application/json
+
+### ============================================
+### Test 5: Get Approval Stats - Filter by MULTIPLE categories (multiple EQ)
+### ============================================
+GET {{baseUrl}}/getApprovalStats(filters='[{"path":"mot","operator":"EQ","value1":"Air"},{"path":"category","operator":"EQ","value1":"Aerospace"},{"path":"category","operator":"EQ","value1":"Automotive"}]')
+Content-Type: application/json
+
+### ============================================
+### Test 6: Get Approval Stats - Filter by sourceLocation
+### ============================================
+GET {{baseUrl}}/getApprovalStats(filters='[{"path":"sourceLocation","operator":"EQ","value1":"LOC1"}]')
+Content-Type: application/json
+
+### ============================================
+### Test 7: Get Approval Stats - Filter by approveLoad = true
+### ============================================
+GET {{baseUrl}}/getApprovalStats(filters='[{"path":"approveLoad","operator":"EQ","value1":true}]')
+Content-Type: application/json
+
+### ============================================
+### Test 8: Get Approval Stats - Filter by approveLoad = false
+### ============================================
+GET {{baseUrl}}/getApprovalStats(filters='[{"path":"approveLoad","operator":"EQ","value1":false}]')
+Content-Type: application/json
+
+### ============================================
+### Test 9: Get Approval Stats - Filter by quantity range (BT - Between)
+### ============================================
+GET {{baseUrl}}/getApprovalStats(filters='[{"path":"quantity","operator":"BT","value1":100,"value2":500}]')
+Content-Type: application/json
+
+### ============================================
+### Test 10: Get Approval Stats - Filter by quantity greater than (GT)
+### ============================================
+GET {{baseUrl}}/getApprovalStats(filters='[{"path":"quantity","operator":"GT","value1":100}]')
+Content-Type: application/json
+
+### ============================================
+### Test 11: Get Approval Stats - Multiple filters combined
+### ============================================
+GET {{baseUrl}}/getApprovalStats(filters='[{"path":"category","operator":"EQ","value1":"Aerospace"},{"path":"approveLoad","operator":"EQ","value1":false}]')
+Content-Type: application/json
+
+### ============================================
+### Test 12: Get Approval Stats - Contains filter
+### ============================================
+GET {{baseUrl}}/getApprovalStats(filters='[{"path":"product","operator":"Contains","value1":"Widget"}]')
+Content-Type: application/json
+
+### ============================================
+### Test 13: Approve Orders - By specific order numbers (MASS APPROVAL)
+### ============================================
+POST {{baseUrl}}/approveOrders
+Content-Type: application/json
+
+{
+    "orders": [
+        {"orderNumber": "ORD001", "itemNumber": "10"},
+        {"orderNumber": "ORD002", "itemNumber": "10"}
+    ],
+    "approveLoad": true,
+    "reasonCode": "",
+    "filters": "",
+    "allSelected": false
+}
+
+### ============================================
+### Test 14: Approve Orders - All filtered orders
+### ============================================
+POST {{baseUrl}}/approveOrders
+Content-Type: application/json
+
+{
+    "orders": [],
+    "approveLoad": true,
+    "reasonCode": "",
+    "filters": "[{\"path\":\"category\",\"operator\":\"EQ\",\"value1\":\"Aerospace\"}]",
+    "allSelected": true
+}
+
+### ============================================
+### Test 15: Reject Orders with Reason Code
+### ============================================
+POST {{baseUrl}}/approveOrders
+Content-Type: application/json
+
+{
+    "orders": [
+        {"orderNumber": "ORD003", "itemNumber": "10"}
+    ],
+    "approveLoad": false,
+    "reasonCode": "RC001",
+    "filters": "",
+    "allSelected": false
+}
+
+### ============================================
+### Value Help Endpoints
+### ============================================
+
+### Get Products Value Help
+GET {{baseUrl}}/ProductVH
+Content-Type: application/json
+
+### Get MOT Value Help
+GET {{baseUrl}}/MOTVH
+Content-Type: application/json
+
+### Get Source Locations Value Help
+GET {{baseUrl}}/sourceLocationVH
+Content-Type: application/json
+
+### Get Destination Locations Value Help
+GET {{baseUrl}}/destinationLocationVH
+Content-Type: application/json
+
+### Get Categories Value Help
+GET {{baseUrl}}/categoryVH
+Content-Type: application/json
+
+### Get Boolean Value Help
+GET {{baseUrl}}/BooleanVH
+Content-Type: application/json

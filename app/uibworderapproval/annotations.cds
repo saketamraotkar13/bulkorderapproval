@@ -248,10 +248,6 @@ annotate service.Orders with @(
             },
             {
                 $Type: 'UI.DataField',
-                Value: mot2,
-            },
-            {
-                $Type: 'UI.DataField',
                 Value: fastestMOT,
                 Label: 'Fastest MOT',
             },
@@ -336,6 +332,10 @@ annotate service.Orders with @(
                 $Type: 'UI.DataField',
                 Value: reasonCode,
             },
+            {
+                $Type: 'UI.DataField',
+                Value: mot2,
+            }
         ],
     },
 );
