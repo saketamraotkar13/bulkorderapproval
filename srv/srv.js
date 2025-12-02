@@ -5,7 +5,7 @@ class MyOrderApprovalService extends cds.ApplicationService {
     async init() {        
         const { BooleanVH, Orders } = this.entities;
 
-        // ✅ Complete field list including new fields
+        // Complete field list including new fields
         const validFields = [
             'orderNumber', 'itemNumber', 'product', 'sourceLocation', 'destinationLocation',
             'mot', 'quantity', 'uom', 'category', 'categoryDescription', 'startDate', 'endDate',
@@ -30,7 +30,7 @@ class MyOrderApprovalService extends cds.ApplicationService {
             try {
                 aFilters = JSON.parse(filters);
             } catch (e) { 
-                console.log("❌ Filter parse error:", e);
+                console.log("Filter parse error:", e);
                 return whereConditions;
             }
 
@@ -85,7 +85,7 @@ class MyOrderApprovalService extends cds.ApplicationService {
                         break;
 
                     default:
-                        console.warn("⚠ Unsupported operator:", f.operator);
+                        console.warn("Unsupported operator:", f.operator);
                 }
             });
 
@@ -121,7 +121,7 @@ class MyOrderApprovalService extends cds.ApplicationService {
             // Rule 3: If approving (true), reasonCode must be cleared
             if (approveLoad === true) {
                 req.data.reasonCode = null;
-                console.log("✅ Order approved: reasonCode cleared");
+                console.log("Order approved: reasonCode cleared");
             }
         });
 
@@ -132,13 +132,13 @@ class MyOrderApprovalService extends cds.ApplicationService {
         this.on('getApprovalStats', async (req) => {
             const { filters } = req.data;
 
-            console.log("✅ getApprovalStats invoked");
+            console.log("getApprovalStats invoked");
             console.log("filters (raw):", filters);
 
             try {
                 // Parse filters to WHERE conditions
                 const whereConditions = parseFiltersToWhere(filters);
-                console.log("🔍 Where conditions:", JSON.stringify(whereConditions, null, 2));
+                console.log("Where conditions:", JSON.stringify(whereConditions, null, 2));
 
                 // Build query with or without filters
                 let query = SELECT.one.from(Orders).columns(
@@ -179,11 +179,11 @@ class MyOrderApprovalService extends cds.ApplicationService {
                     sumOfProfitAtRisk: parseFloat(Number(result.sumOfProfitAtRisk || 0).toFixed(3))
                 };
 
-                console.log("✅ Stats calculated:", stats);
+                console.log("Stats calculated:", stats);
                 return stats;
 
             } catch (err) {
-                console.error("❌ Error fetching approval stats:", err);
+                console.error("Error fetching approval stats:", err);
                 return req.error(500, "Failed to fetch approval statistics: " + err.message);
             }
         });
@@ -192,7 +192,7 @@ class MyOrderApprovalService extends cds.ApplicationService {
         //  Boolean Values f4 help
         // -------------------------------
         this.on('READ', 'BooleanVH', async (req) => {
-            console.log("📖 BooleanVH READ triggered!");
+            console.log("BooleanVH READ triggered!");
             const data = [
                 { code: true,  label: "true" },
                 { code: false, label: "false" }
@@ -207,7 +207,7 @@ class MyOrderApprovalService extends cds.ApplicationService {
 
             let { orders, approveLoad, reasonCode, filters, allSelected } = req.data;
 
-            console.log("🔥 approveOrders invoked");
+            console.log("approveOrders invoked");
             console.log("orders:", orders);
             console.log("filters (raw):", filters);
             console.log("allSelected:", allSelected);
@@ -215,7 +215,7 @@ class MyOrderApprovalService extends cds.ApplicationService {
             // Parse filters using helper function
             const whereConditions = parseFiltersToWhere(filters);
 
-            console.log("🔍 Where conditions:", JSON.stringify(whereConditions, null, 2));
+            console.log("Where conditions:", JSON.stringify(whereConditions, null, 2));
 
             // -------------------------------
             //  DETERMINE WHICH ORDERS TO UPDATE
@@ -223,7 +223,7 @@ class MyOrderApprovalService extends cds.ApplicationService {
             let ordersToUpdate = [];
 
             if (allSelected) {
-                console.log("🔍 allSelected = TRUE — loading by filters");
+                console.log("allSelected = TRUE — loading by filters");
 
                 try {
                     const rows = await SELECT.from(Orders)
@@ -235,14 +235,14 @@ class MyOrderApprovalService extends cds.ApplicationService {
                         itemNumber: r.itemNumber
                     }));
 
-                    console.log(`📊 Found ${ordersToUpdate.length} orders matching filters`);
+                    console.log(`Found ${ordersToUpdate.length} orders matching filters`);
                 } catch (err) {
-                    console.error("❌ Error fetching orders:", err);
+                    console.error("Error fetching orders:", err);
                     return req.error(500, "Failed to fetch orders: " + err.message);
                 }
             }
             else {
-                console.log("🔍 Updating only selected orders");
+                console.log("Updating only selected orders");
 
                 if (!orders || orders.length === 0) {
                     return req.error(400, "No orders selected.");
@@ -261,7 +261,7 @@ class MyOrderApprovalService extends cds.ApplicationService {
                             )
                         );
                     } catch (err) {
-                        console.error("❌ Error validating selected orders:", err);
+                        console.error("Error validating selected orders:", err);
                         return req.error(500, "Failed to validate orders: " + err.message);
                     }
                 } else {
@@ -273,7 +273,7 @@ class MyOrderApprovalService extends cds.ApplicationService {
                 return req.error(400, "No orders to update after applying filters.");
             }
 
-            console.log(`✅ Will update ${ordersToUpdate.length} orders`);
+            console.log(`Will update ${ordersToUpdate.length} orders`);
 
             // -------------------------------
             //  OPTIMIZED UPDATE WITH NATIVE SQL
@@ -281,7 +281,7 @@ class MyOrderApprovalService extends cds.ApplicationService {
             try {
                 const db = await cds.connect.to('db');
 
-                // ✅ Build parameterized SQL query
+                // Build parameterized SQL query
                 const buildUpdateQuery = (batch) => {
                     const conditions = batch.map((_, idx) =>
                         `(orderNumber = ? AND itemNumber = ?)`
@@ -304,7 +304,7 @@ class MyOrderApprovalService extends cds.ApplicationService {
                     await db.run(query.sql, query.params);
 
                     const duration = Date.now() - startTime;
-                    console.log(`✅ Updated ${ordersToUpdate.length} orders in 1 query (${duration}ms)`);
+                    console.log(`Updated ${ordersToUpdate.length} orders in 1 query (${duration}ms)`);
                 } else {
                     // Parallel batch execution for large datasets
                     const BATCH_SIZE = 1000;
@@ -322,7 +322,7 @@ class MyOrderApprovalService extends cds.ApplicationService {
                     );
 
                     const duration = Date.now() - startTime;
-                    console.log(`✅ Updated ${ordersToUpdate.length} orders in ${batches.length} parallel queries (${duration}ms)`);
+                    console.log(`Updated ${ordersToUpdate.length} orders in ${batches.length} parallel queries (${duration}ms)`);
                 }
 
                 return {
@@ -332,7 +332,7 @@ class MyOrderApprovalService extends cds.ApplicationService {
                 };
 
             } catch (err) {
-                console.error("❌ Bulk update error:", err);
+                console.error("Bulk update error:", err);
                 return req.error(500, "Bulk approval failed: " + err.message);
             }
 
