@@ -57,7 +57,6 @@
 							<viz.feeds:FeedItem uid="color" type="Dimension" values="Status"/>
 						</viz:feeds>
 					</viz:VizFrame>
-					<!-- <Label text="KPI Details:"></Label> -->
 				</layout:VerticalLayout>
 				<!-- Statistics Table -->
 				<Table class="sapUiSmallMarginTop" width="100%"> 
@@ -109,21 +108,43 @@
 						</ColumnListItem>
 						<ColumnListItem vAlign="Middle">
 							<cells>
-								<ObjectIdentifier title="Other Metcics"/>
+								<ObjectIdentifier title="Other Metrics"/>
 							</cells>
 						</ColumnListItem>
-						<!-- ✅ NEW: Total Quantity Row -->
+						<!-- Total Quantity Row - Formatted -->
 						<ColumnListItem>
 							<cells>
 								<Text text="Total Quantity"/>
-								<Text text="{kpi>/sumOfQuantity}"/>
+								<ObjectNumber 
+									number="{
+										path: 'kpi>/sumOfQuantity',
+										type: 'sap.ui.model.type.Float',
+										formatOptions: {
+											groupingEnabled: true,
+											minFractionDigits: 2,
+											maxFractionDigits: 2
+										}
+									}" 
+									state="None"/>
+								<Text text=""/>
 							</cells>
 						</ColumnListItem>
-						<!-- ✅ NEW: Total Profit At Risk Row -->
+						<!-- Total Profit At Risk Row - Formatted -->
 						<ColumnListItem>
 							<cells>
 								<Text text="Total Profit At Risk"/>
-								<Text text="{kpi>/sumOfProfitAtRisk}"/>
+								<ObjectNumber 
+									number="{
+										path: 'kpi>/sumOfProfitAtRisk',
+										type: 'sap.ui.model.type.Float',
+										formatOptions: {
+											groupingEnabled: true,
+											minFractionDigits: 2,
+											maxFractionDigits: 2
+										}
+									}" 
+									state="Error"/>
+								<Text text=""/>
 							</cells>
 						</ColumnListItem>
 					</items>
