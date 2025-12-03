@@ -13,7 +13,7 @@ class MyOrderApprovalService extends cds.ApplicationService {
             // New fields
             'fastestMOT', 'slowestMOT', 'productCategory', 'estimatedRisk', 'profitAtRisk',
             'costDelta', 'impactAmount', 'fastestMOTCost', 'slowestMOTCost', 
-            'fastestMOTDurationDays', 'slowestMOTDurationDays', 'aiReason', 'aiOutput'
+            'fastestMOTDurationDays', 'slowestMOTDurationDays', 'aiReason'
         ];
 
         // -------------------------------

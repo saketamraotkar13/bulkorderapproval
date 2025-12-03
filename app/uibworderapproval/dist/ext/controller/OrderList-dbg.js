@@ -16,7 +16,7 @@ sap.ui.define([
             var oModel = this.getModel();
             var that = this;
 
-            // 🔹 Get current filters from FilterBar (same logic as onBulkApproval)
+            // Get current filters from FilterBar (same logic as onBulkApproval)
             const flattenFilters = function (oFilter) {
                 let aResult = [];
                 if (!oFilter) return aResult;
@@ -54,7 +54,7 @@ sap.ui.define([
                 .then(function () {
                     // Get the data
                     var oKPIData = oFunctionContext.getBoundContext().getObject();
-                    console.log("📊 KPI Data received:", oKPIData);
+                    console.log("KPI Data received:", oKPIData);
 
                     sap.ui.core.BusyIndicator.hide();
 
@@ -67,7 +67,7 @@ sap.ui.define([
                         }).then(function (oDialog) {
                             that._kpiDialog = oDialog;
 
-                            // ✅ Create and set KPI model with chart data
+                            // Create and set KPI model with chart data
                             var oKPIModel = new sap.ui.model.json.JSONModel({
                                 totalOrders: oKPIData.totalOrders || 0,
                                 approvedOrders: oKPIData.approvedOrders || 0,
@@ -79,7 +79,7 @@ sap.ui.define([
                                 sumOfQuantity: oKPIData.sumOfQuantity || 0,
                                 sumOfProfitAtRisk: oKPIData.sumOfProfitAtRisk || 0,
                                 lastUpdated: new Date().toLocaleString(),
-                                // ✅ Chart data format
+                                // Chart data format
                                 chartData: [
                                     {
                                         status: "Approved",
@@ -99,13 +99,13 @@ sap.ui.define([
                             that._kpiDialog.setModel(oKPIModel, "kpi");
                             that._kpiDialog.open();
 
-                            console.log("✅ Dialog opened with KPI data");
+                            console.log("Dialog opened with KPI data");
                         }).catch(function (error) {
-                            console.error("❌ Error loading fragment:", error);
+                            console.error("Error loading fragment:", error);
                             MessageBox.error("Failed to load fragment: " + error.message);
                         });
                     } else {
-                        // ✅ Dialog exists - update data and reopen
+                        // Dialog exists - update data and reopen
                         var oKPIModel = that._kpiDialog.getModel("kpi");
                         oKPIModel.setData({
                             totalOrders: oKPIData.totalOrders || 0,
@@ -135,12 +135,12 @@ sap.ui.define([
                         });
 
                         that._kpiDialog.open();
-                        console.log("✅ Dialog reopened with refreshed data");
+                        console.log("Dialog reopened with refreshed data");
                     }
                 })
                 .catch(function (oError) {
                     sap.ui.core.BusyIndicator.hide();
-                    console.error("❌ Failed to load KPI data:", oError);
+                    console.error("Failed to load KPI data:", oError);
                     MessageBox.error("Failed to load KPI statistics: " + (oError.message || "Unknown error"));
                 });
         },
@@ -171,7 +171,7 @@ sap.ui.define([
 
             const countSelectedOrders = aSelectedOrders.length;
 
-            // 🔹 Flatten FE filters
+            // Flatten FE filters
             const flattenFilters = function (oFilter) {
                 let aResult = [];
                 if (!oFilter) return aResult;
@@ -196,7 +196,7 @@ sap.ui.define([
                 aFilters = flattenFilters(oFEFilters.filters[0]);
             }
 
-            // ✅ Controls
+            // Controls
             var oApproveCheckbox = new sap.m.CheckBox({
                 text: "Approve Load",
                 width: "100%",
@@ -221,7 +221,7 @@ sap.ui.define([
                 var bApprove = oEvent.getParameter("selected");
                 oReasonCombo.setEnabled(!bApprove);
                 oReasonCombo.setRequired(!bApprove);
-                // ✅ Clear reason code when approving
+                // Clear reason code when approving
                 if (bApprove) {
                     oReasonCombo.setSelectedKey("");
                 }
@@ -295,7 +295,7 @@ sap.ui.define([
                                 var oAction = oModel.bindContext("/approveOrders(...)");
                                 oAction.setParameter("orders", ordersChunk);
                                 oAction.setParameter("approveLoad", bApproveLoad);
-                                // ✅ Only pass reasonCode if not approving
+                                // Only pass reasonCode if not approving
                                 oAction.setParameter("reasonCode", bApproveLoad ? "" : sReasonCode);
                                 oAction.setParameter("filters", JSON.stringify(aFilters));
                                 oAction.setParameter("allSelected", bSelectAll);

@@ -319,11 +319,6 @@ annotate service.Orders with @(
             },
             {
                 $Type: 'UI.DataField',
-                Value: aiOutput,
-                Label: 'AI Output',
-            },
-            {
-                $Type: 'UI.DataField',
                 Value: aimot2,
                 Label: 'AI MOT2',
             },            
@@ -665,7 +660,6 @@ annotate service.Orders with {
     estimatedRisk             @Common.FieldControl : #ReadOnly;
     costDelta                 @Common.FieldControl : #ReadOnly;
     aiReason                  @Common.FieldControl : #ReadOnly;
-    aiOutput                  @Common.FieldControl : #ReadOnly;
     profitAtRisk              @Common.FieldControl : #ReadOnly;
     aimot2                    @Common.FieldControl : #ReadOnly;
 };

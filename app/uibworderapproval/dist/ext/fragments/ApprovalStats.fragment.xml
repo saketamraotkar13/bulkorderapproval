@@ -8,7 +8,7 @@
 	xmlns:viz.data="sap.viz.ui5.data">
 	<Dialog
 		id="ShowTablePop"
-		title="📊 Order Approval KPIs"
+		title="Order Approval KPIs"
 		contentWidth="100%"
 		contentHeight="100%"
 		draggable="true"

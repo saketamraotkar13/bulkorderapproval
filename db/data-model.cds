@@ -31,7 +31,7 @@ entity Orders {
     destStockOH               : Decimal(18,3);
     @title: 'Suggested MOT'
     mot2                      : String;
-    @title: 'AI MOT'
+    @title: 'AI Recommended MOT'
     aimot2                    : String;    
     @title: 'ABC Class'
     abcClass                  : String;
@@ -66,8 +66,6 @@ entity Orders {
     slowestMOTDurationDays      : String;
     @title : 'AI Reason'
     aiReason                    : String;
-    @title: 'AI Output'
-    aiOutput                    : String;
 } 
 
 entity reasonCodeVH  {
